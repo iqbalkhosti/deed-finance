@@ -1,9 +1,12 @@
 from sqlalchemy import create_engine
+from dotenv import load_dotenv
+import os
 
 #creating the connection between the mysql and code out here
 
+load_dotenv()
 
-engine = create_engine("mysql+pymysql://sql3724833:bGeEVrbPrt@sql3.freemysqlhosting.net/sql3724833?charset=utf8mb4")
+engine = create_engine(os.getenv("DATABASE_CONNECTION_STRING"))
 
 # with engine.connect() as conn:
 #     result = conn.execute(text("SELECT * FROM user"))
