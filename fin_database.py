@@ -6,7 +6,7 @@ import os
 
 load_dotenv()
 
-engine = create_engine(os.getenv("DATABASE_CONNECTION_STRING"))
+engine = create_engine("mysql+pymysql://sql3724833:bGeEVrbPrt@sql3.freemysqlhosting.net/sql3724833?charset=utf8mb4")
 
 # with engine.connect() as conn:
 #     result = conn.execute(text("SELECT * FROM user"))

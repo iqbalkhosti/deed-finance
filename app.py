@@ -18,5 +18,8 @@ def index():
     info = load_customer_info()
     return render_template("index.html", jobs=info)
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5001, debug=True)
+# if __name__ == "__main__":
+#     app.run(host='0.0.0.0', port=5001, debug=True)
+
+import os
+print(os.getenv("DATABASE_CONNECTION_STRING"))
