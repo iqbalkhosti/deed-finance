@@ -11,6 +11,19 @@
 
         <p class="fs-2 font-monospace text-center ">We know why you are here!!<br>Welcome to the future of subscriptions</p>
 
+        <div class="col-md-4 offset-md-2 pt-3">
+            <ul>
+                <p class="fs-3">Customer Information: </p>
+                {% for job in jobs %}
+                <p >ID: {{ job.id }}</p>
+                <p>Name: {{ job.name }}</p>
+                <p>Email: {{job.email}}</p>
+                <p>Bank Name: {{job.bank}}</p>
+
+                {% endfor %}
+            </ul>
+        </div>
+        
     
     <img src="/static/hoodie1.jpg">
 
@@ -18,5 +31,6 @@
     <input type="checkbox" class="btn-check" id="btn-check-5" checked autocomplete="off">
     <label class="btn" for="btn-check-5">Checked</label>
     
+    <!-- Here i am creating a div for footer-->
 
 {% endblock %}
