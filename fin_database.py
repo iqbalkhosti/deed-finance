@@ -8,7 +8,8 @@ load_dotenv()
 
 DB_URL = os.getenv("DATABASE_CONNECTION_STRING")
 
-print(DB_URL)
+if not DB_URL:
+    raise ValueError("The code db url is not working")
 
 engine = create_engine(DB_URL)
 
