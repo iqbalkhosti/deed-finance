@@ -4,6 +4,7 @@
 
 {% block content %}
     
+{% include "navbar.html" %} 
 
 <div>
 
@@ -16,7 +17,7 @@
                 <p class="fs-3">Customer Information: </p>
                 {% for job in jobs %}
                 <p >ID: {{ job.id }}</p>
-                <p>Name: {{ job.name }}</p>
+                <a href="{{ url_for('load_info_by_id', id=job.id) }}">{{ job.name }}</a>
                 <p>Email: {{job.email}}</p>
                 <p>Bank Name: {{job.bank}}</p>
 
