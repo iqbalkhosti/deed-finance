@@ -22,12 +22,11 @@ def load_customer_specific_info(id):
         
         rows= customer.all()
 
-        rows_dict = [row._mapping for row in rows]
+        if rows:
+            return rows[0]._mapping
 
-        if len(rows)==0:
-            return None
         else:
-            return rows_dict[0]
+            return None
 
 @app.route("/")
 def index():
@@ -38,8 +37,13 @@ def index():
 def load_info_by_id(id):
     
     customer = load_customer_specific_info(id)
-
+    
+    if not customer:
+        return "Not Found" , 404
+    
     return render_template("jobitem.html", user=customer)
+    
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5001, debug=True)

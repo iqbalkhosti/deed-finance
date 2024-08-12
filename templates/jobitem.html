@@ -3,10 +3,17 @@
 {% block title %}Our Customers{% endblock %}
 {% block content %}
 
-    <h3>Customer Info</h3>
-    {{user.id}}
-    {{user.name}}
-    {{user.email}}
-    <p class="font-monospace fs-2">They are our customers and we love them</p>
+    <div class="col-md-3 offset-md-2">
+        
+    <h3>
+        <br>Customer Info</h3>
+
+    
+    <p>Here is the info about our customer:</p>
+    <p>Their user id is: {{user.id}}</p>
+    <p>Their name is: {{user.name}}</p>
+    <p>Their email is: {{user.email}}</p>
+
+    </div>
 
 {% endblock %}

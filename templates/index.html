@@ -17,7 +17,7 @@
                 <p class="fs-3">Customer Information: </p>
                 {% for job in jobs %}
                 <p >ID: {{ job.id }}</p>
-                <a href="{{ url_for('load_info_by_id', id=job.id) }}">{{ job.name }}</a>
+                <a href="{{ url_for('load_info_by_id', id=job.id) }}" class="font-monospace" style="color: black;">{{ job.name }}</a>
                 <p>Email: {{job.email}}</p>
                 <p>Bank Name: {{job.bank}}</p>
 
