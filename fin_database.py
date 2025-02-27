@@ -1,24 +1,55 @@
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
+from sqlalchemy import create_engine, ForeignKey, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-#creating the connection between the mysql and code out here
+engine = create_engine("sqlite:///clients.db", echo=True)
+Base= declarative_base()
+Session = sessionmaker(bind=engine)
 
-load_dotenv()
+session = Session()
 
-DB_URL = os.getenv("DATABASE_CONNECTION_STRING")
+class Client(Base):
 
-if not DB_URL:
-    raise ValueError("The code db url is not working")
+    __tablename__= "Client"
 
-engine = create_engine(DB_URL)
+    id= Column(Integer, primary_key = True)
 
-# with engine.connect() as conn:
-#     result = conn.execute(text("SELECT * FROM user"))
-#     result_all = result.all()
+    name = Column(String)
+    email= Column(String)
+    bank= Column(String)
 
-#     # here creating a dictionary of the sqlalchemy objects
+Base.metadata.create_all(engine)
 
-#     result_dicts = [row._mapping for row in result_all]
+
+
+
+
+
+# <---- THE CODE BELOW IS CHANGED AS WE ARE SWITCHING FROM A SERVER BASED DATABASE TO A LOCAL DATABASE ----> #
+
+
+
+# from sqlalchemy import create_engine
+# from dotenv import load_dotenv
+# import os
+
+# #creating the connection between the mysql and code out here
+
+# load_dotenv()
+
+# DB_URL = os.getenv("DATABASE_CONNECTION_STRING")
+
+# if not DB_URL:
+#     raise ValueError("The code db url is not working")
+
+# engine = create_engine(DB_URL)
+
+# # with engine.connect() as conn:
+# #     result = conn.execute(text("SELECT * FROM user"))
+# #     result_all = result.all()
+
+# #     # here creating a dictionary of the sqlalchemy objects
+
+# #     result_dicts = [row._mapping for row in result_all]
     
-#     print(result_dicts)
+# #     print(result_dicts)

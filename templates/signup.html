@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Sign up{% endblock %}
+
+{% block content %}
+<style>
+    .signup-container {
+        width: 80%;
+        margin: 150px auto 50px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+    
+    .card {
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-primary {
+        width: 100%;
+        padding: 12px;
+        margin-top: 1rem;
+    }
+    
+    .form-check {
+        margin: 1rem 0;
+    }
+</style>
+
+<div class="signup-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 mb-5">
+            <h1 class="display-5 fw-bold mb-4">
+                The best offer for your business
+            </h1>
+            <p class="lead mb-5">
+                WELCOME TO THE FUTURE OF MONEY!
+            </p>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <input type="text" class="form-control" placeholder="Name" id="inputName">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <input type="text" class="form-control" placeholder="Surname" id="inputSurname">
+                        </div>
+                    </div>
+
+                    <input type="email" class="form-control mb-3" placeholder="Email Address" id="inputEmail">
+                    <input type="password" class="form-control mb-3" placeholder="Password" id="inputPassword">
+                    <input type="password" class="form-control mb-3" placeholder="Confirm Password" id="inputConfirm">
+
+                    <p id="confirmPasswordError" class="text-danger mb-3" style="display: none;"></p>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="inputCheck">
+                        <label class="form-check-label">
+                            Subscribe to our newsletter
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" onclick="signupFunc(event)">
+                        Sign up
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function signupFunc(event) {
+        event.preventDefault();
+        const password = document.getElementById('inputPassword').value;
+        const confirmPassword = document.getElementById('inputConfirm').value;
+        const errorElement = document.getElementById('confirmPasswordError');
+
+        if (password !== confirmPassword) {
+            errorElement.style.display = 'block';
+            errorElement.innerText = "Passwords do not match";
+        } else {
+            errorElement.style.display = 'none';
+            // Add your form submission logic here
+        }
+    }
+</script>
+
+{% include "footer.html" %}
+{% endblock %}
