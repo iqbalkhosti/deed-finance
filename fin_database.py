@@ -14,9 +14,10 @@ class Client(Base):
 
     id= Column(Integer, primary_key = True)
 
-    name = Column(String)
-    email= Column(String)
-    bank= Column(String)
+    first_name = Column(String(100))
+    email= Column(String(100))
+    bank= Column(String(100), unique=True)
+    password = Column(String(200))
 
 Base.metadata.create_all(engine)
 
