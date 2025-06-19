@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, ForeignKey, Column, Integer, String
+from sqlalchemy import create_engine, ForeignKey, Column, Integer, String, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -9,22 +9,24 @@ Session = sessionmaker(bind=engine)
 session = Session()
 
 class Client(Base):
-
-    __tablename__= "Client"
-
-    id= Column(Integer, primary_key = True)
-
+    __tablename__ = "Client"
+    id         = Column(Integer, primary_key=True)
     first_name = Column(String(100))
-    email= Column(String(100))
-    bank= Column(String(100), unique=True)
-    password = Column(String(200))
+    surname    = Column(String(100))         # ← add this
+    email      = Column(String(100))
+    # bank       = Column(String(100), unique=True)
+    password   = Column(String(200))
 
 Base.metadata.create_all(engine)
 
 
+# the following line is for inserting any sql query to the database.
 
-
-
+# with engine.connect() as conn:
+#     conn.execute(
+#         text("ALTER TABLE Client ADD COLUMN surname VARCHAR(100)")
+#         )
+#     conn.commit()
 
 # <---- THE CODE BELOW IS CHANGED AS WE ARE SWITCHING FROM A SERVER BASED DATABASE TO A LOCAL DATABASE ----> #
 

@@ -1,44 +1,31 @@
-{% extends "base.html"%}
+{% extends "base.html" %}
 
-{% block title %}Leisure{% endblock %}  
+{% block title %}Leisure{% endblock %}
 
 {% block content %}
-    
-{% include "navbar.html" %} 
+  <p class="fs-2 font-monospace text-center">
+    We know why you are here!!<br>
+    Welcome to the future of subscriptions
+  </p>
 
-<div>
-
-
-        <p class="fs-2 font-monospace text-center ">We know why you are here!!<br>Welcome to the future of subscriptions</p>
-
-        <div class="col-md-4 offset-md-2 pt-3">
-            <ul>
-                <p class="fs-3">Customer Information: </p>
-                {% for job in jobs %}
-                <p >ID: {{ job.id }}</p>
-                <a href="{{ url_for('load_info_by_id', id=job.id) }}" class="font-monospace" style="text-decoration:none; color: black;">{{ job.name }}</a>
-                <p>Email: {{job.email}}</p>
-                <p>Bank Name: {{job.bank}}</p>
-
-                {% endfor %}
-            </ul>
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+      <h3 class="mb-3">Customer Information</h3>
+      {% for job in jobs %}
+        <div class="mb-4 p-3 border rounded">
+          <p><strong>ID:</strong> {{ job.id }}</p>
+          <p>
+            <strong>Name:</strong>
+            <a href="{{ url_for('load_info_by_id', id=job.id) }}">
+              {{ job.first_name }} {{ job.surname }}
+            </a>
+          </p>
+          <p><strong>Email:</strong> {{ job.email }}</p>
+          <p><strong>Bank:</strong> {{ job.bank }}</p>
         </div>
-        
-</div>
-
-    <div class="text-center">
-    <input type="checkbox" class="btn-check" id="btn-check-5" checked autocomplete="off">
-    <label class="btn" for="btn-check-5">Checked</label>
-    
-    </div>    
-    <!-- Here i am creating a div for footer-->
-    <div>
-
-    {% include "footer.html" %}
-
+      {% else %}
+        <p>No customers found.</p>
+      {% endfor %}
     </div>
-    
-    <!-- Here is the signup file and function to collect the info -->
-
-    
+  </div>
 {% endblock %}
