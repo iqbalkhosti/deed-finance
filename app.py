@@ -1,10 +1,10 @@
-from flask import Flask, render_template, flash, redirect, url_for
+from flask import Flask, render_template, flash, redirect, url_for, request
 from fin_database import Session, engine,Client
 
 
 from sqlalchemy import create_engine, text
 from flask_bcrypt import Bcrypt
-from forms import SignupForm
+from forms import SignupForm, LoginForm
 
 
 
@@ -79,8 +79,32 @@ def signup():
     
     return render_template("signup.html", form=form)
    
-   
-   
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        with Session(bind=engine) as session:
+            client = session.query(Client).filter_by(email=form.email.data).first()
+
+        # Case 1: user exists AND password matches
+        if client and bcrypt.check_password_hash(client.password, form.password.data):
+            flash("Login successful!", "success")
+            return redirect(url_for('index'))
+
+        # Case 2: email not found
+        if not client:
+            flash("Email not found. Please sign up.", "danger")
+        # Case 3: password wrong
+        else:
+            flash("Incorrect password. Please try again.", "danger")
+
+    elif request.method == "POST":
+        # debug helper
+        app.logger.debug("Login form errors: %s", form.errors)
+        flash(f"Form errors: {form.errors}", "warning")
+
+    return render_template("login.html", form=form)
 
 
 

@@ -4,6 +4,8 @@ from wtforms.validators import (DataRequired, Email, Length, EqualTo)
 
 class SignupForm(FlaskForm):
 
+
+
     first_name = StringField(
         
         "First Name",
@@ -29,3 +31,14 @@ class SignupForm(FlaskForm):
 
     submit = SubmitField(
         "Sign Up")
+    
+class LoginForm(FlaskForm):
+        email = StringField(
+            "Email",
+            validators=[DataRequired(), Email(message="Please enter a valid email address.")]
+        )
+        password = PasswordField(
+            "Password",
+            validators=[DataRequired(), Length(min=8, max=256, message="Password must be more than 8 characters.")]
+        )
+        submit = SubmitField("Login")
