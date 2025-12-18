@@ -3,3 +3,6 @@ gunicorn
 sqlalchemy
 python-dotenv
 pymysql
+Flask-Mail
+Flask-Bcrypt
+Flask-Login

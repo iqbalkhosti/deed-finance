@@ -22,6 +22,11 @@ class Client(Base, UserMixin):
     password = Column(String(200))
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    # Email verification fields
+    is_verified = Column(Boolean, default=False)
+    verification_code = Column(String(6), nullable=True)
+    code_expires_at = Column(DateTime, nullable=True)
+    
     # Relationships
     user_cards = relationship("UserCard", back_populates="client", cascade="all, delete-orphan")
     user_subscriptions = relationship("UserSubscription", back_populates="client", cascade="all, delete-orphan")

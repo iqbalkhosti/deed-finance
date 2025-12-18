@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Your Email{% endblock %}
+
+{% block content %}
+<style>
+    .verify-container {
+        max-width: 450px;
+        margin: 80px auto;
+    }
+
+    .card {
+        padding: 2.5rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+
+    .verify-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+    }
+
+    .verify-icon i {
+        font-size: 36px;
+        color: white;
+    }
+
+    .code-input {
+        font-size: 24px;
+        letter-spacing: 8px;
+        text-align: center;
+        font-weight: 600;
+        padding: 15px;
+    }
+
+    .resend-link {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .resend-link:hover {
+        text-decoration: underline;
+    }
+
+    .email-display {
+        background: #f8f9fa;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+
+<div class="verify-container">
+    <div class="card">
+        <div class="verify-icon">
+            <i class="bi bi-envelope-check"></i>
+        </div>
+
+        <h2 class="text-center mb-3">Verify Your Email</h2>
+        <p class="text-center text-muted mb-4">
+            We've sent a 6-digit code to
+        </p>
+        <p class="text-center mb-4">
+            <span class="email-display">{{ email }}</span>
+        </p>
+
+        <form method="POST" action="{{ url_for('verify_email') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-4">
+                {{ form.code(class="form-control code-input", placeholder="000000", maxlength="6", autocomplete="off",
+                autofocus=true) }}
+                {% for err in form.code.errors %}
+                <div class="text-danger text-center mt-2">{{ err }}</div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="bi bi-check-circle me-2"></i>Verify Email
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <p class="text-muted mb-2">Didn't receive the code?</p>
+            <a href="{{ url_for('resend_verification') }}" class="resend-link">
+                <i class="bi bi-arrow-clockwise me-1"></i>Resend Code
+            </a>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="text-center">
+            <a href="{{ url_for('logout') }}" class="text-muted small">
+                <i class="bi bi-arrow-left me-1"></i>Sign in with a different account
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

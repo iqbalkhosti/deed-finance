@@ -42,3 +42,12 @@ class LoginForm(FlaskForm):
             validators=[DataRequired(), Length(min=8, max=256, message="Password must be more than 8 characters.")]
         )
         submit = SubmitField("Login")
+
+
+class VerificationForm(FlaskForm):
+    """Form for entering email verification code."""
+    code = StringField(
+        "Verification Code",
+        validators=[DataRequired(), Length(min=6, max=6, message="Please enter the 6-digit code.")]
+    )
+    submit = SubmitField("Verify Email")
