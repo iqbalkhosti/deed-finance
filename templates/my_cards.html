@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}My Cards{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold">My Credit Cards</h1>
+            <p class="text-muted mb-0">Manage your cards and track your points</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- User's Cards Section -->
+    {% if user_cards %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="bi bi-wallet2 me-2 text-primary"></i>Your Wallet</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for uc in user_cards %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border" style="border-left: 4px solid #667eea !important;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h6 class="card-title mb-1">{{ uc.credit_card.name }}</h6>
+                                    <span class="badge bg-secondary">{{ uc.credit_card.bank }}</span>
+                                </div>
+                                <form action="{{ url_for('remove_card', user_card_id=uc.id) }}" method="POST"
+                                    class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove card">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div class="mb-3">
+                                <p class="text-muted small mb-1">Current Points Balance</p>
+                                <h3 class="text-primary mb-0">{{ "{:,}".format(uc.current_points) }}</h3>
+                            </div>
+
+                            <form action="{{ url_for('update_points', user_card_id=uc.id) }}" method="POST">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" name="points" class="form-control"
+                                        value="{{ uc.current_points }}" min="0" placeholder="Update points">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Base earn: {{ uc.credit_card.base_earn_rate }}x |
+                                    {{ uc.credit_card.points_name }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Cards Section -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="bi bi-plus-circle me-2 text-success"></i>Add a Credit Card</h5>
+        </div>
+        <div class="card-body">
+            <!-- Bank Filter Tabs -->
+            <ul class="nav nav-pills mb-4" id="bankTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-filter="all">All Banks</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="RBC">RBC</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="BMO">BMO</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="TD">TD</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="CIBC">CIBC</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="Scotiabank">Scotiabank</button>
+                </li>
+            </ul>
+
+            <div class="row g-3" id="cardGrid">
+                {% for card in all_cards %}
+                <div class="col-md-6 col-lg-4 card-item" data-bank="{{ card.bank }}">
+                    <div
+                        class="card h-100 {% if card.id in user_card_ids %}border-success bg-success bg-opacity-10{% else %}border{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary">{{ card.bank }}</span>
+                                {% if card.annual_fee > 0 %}
+                                <span class="badge bg-warning text-dark">${{ "%.0f"|format(card.annual_fee) }}/yr</span>
+                                {% else %}
+                                <span class="badge bg-success">No Fee</span>
+                                {% endif %}
+                            </div>
+
+                            <h6 class="card-title">{{ card.name }}</h6>
+
+                            <ul class="list-unstyled small text-muted mb-3">
+                                <li><i class="bi bi-star me-1"></i>{{ card.base_earn_rate }}x {{ card.points_name }}
+                                </li>
+                                <li><i class="bi bi-coin me-1"></i>~{{ card.point_value_cents }}¢ per point</li>
+                            </ul>
+
+                            {% if card.id in user_card_ids %}
+                            <button class="btn btn-success btn-sm w-100" disabled>
+                                <i class="bi bi-check-lg me-1"></i>Added to Wallet
+                            </button>
+                            {% else %}
+                            <form action="{{ url_for('add_card', card_id=card.id) }}" method="POST">
+                                <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="bi bi-plus-lg me-1"></i>Add to Wallet
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Bank filter functionality
+    document.querySelectorAll('#bankTabs .nav-link').forEach(btn => {
+        btn.addEventListener('click', function () {
+            // Update active state
+            document.querySelectorAll('#bankTabs .nav-link').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Filter cards
+            const filter = this.dataset.filter;
+            document.querySelectorAll('.card-item').forEach(card => {
+                if (filter === 'all' || card.dataset.bank === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

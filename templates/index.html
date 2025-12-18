@@ -1,31 +1,123 @@
 {% extends "base.html" %}
 
-{% block title %}Leisure{% endblock %}
+{% block title %}Welcome{% endblock %}
 
 {% block content %}
-  <p class="fs-2 font-monospace text-center">
-    We know why you are here!!<br>
-    Welcome to the future of subscriptions
-  </p>
+<!-- Hero Section -->
+<div class="bg-gradient px-4 py-5 text-center"
+  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: -1.5rem -0.75rem 2rem; padding: 4rem 1rem !important;">
+  <div class="py-5">
+    <h1 class="display-4 fw-bold text-white mb-3">
+      Stop Paying for Subscriptions
+    </h1>
+    <p class="lead text-white-50 mb-4 mx-auto" style="max-width: 600px;">
+      Use your credit card points to cover Netflix, Spotify, and more.
+      We'll tell you exactly how much to spend and where.
+    </p>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg px-5">
+      <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+    </a>
+    {% else %}
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      <a href="{{ url_for('signup') }}" class="btn btn-light btn-lg px-5">
+        <i class="bi bi-person-plus me-2"></i>Get Started Free
+      </a>
+      <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-5">
+        Log In
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
 
-  <div class="row">
-    <div class="col-md-8 offset-md-2">
-      <h3 class="mb-3">Customer Information</h3>
-      {% for job in jobs %}
-        <div class="mb-4 p-3 border rounded">
-          <p><strong>ID:</strong> {{ job.id }}</p>
-          <p>
-            <strong>Name:</strong>
-            <a href="{{ url_for('load_info_by_id', id=job.id) }}">
-              {{ job.first_name }} {{ job.surname }}
-            </a>
-          </p>
-          <p><strong>Email:</strong> {{ job.email }}</p>
-          <p><strong>Bank:</strong> {{ job.bank }}</p>
+<!-- How It Works Section -->
+<div class="container py-5">
+  <h2 class="text-center mb-5">How It Works</h2>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 text-center p-4">
+        <div
+          class="rounded-circle bg-primary bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+          style="width: 80px; height: 80px;">
+          <i class="bi bi-credit-card fs-1 text-primary"></i>
         </div>
-      {% else %}
-        <p>No customers found.</p>
-      {% endfor %}
+        <h4>1. Add Your Cards</h4>
+        <p class="text-muted mb-0">
+          Select from Canadian bank cards like RBC, BMO, TD, CIBC, and Scotiabank.
+          Enter your current points balance.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 text-center p-4">
+        <div
+          class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+          style="width: 80px; height: 80px;">
+          <i class="bi bi-collection-play fs-1 text-danger"></i>
+        </div>
+        <h4>2. Pick Subscriptions</h4>
+        <p class="text-muted mb-0">
+          Select the subscriptions you want to cover — Netflix, Spotify,
+          Twitter Blue, LinkedIn Premium, and more.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100 text-center p-4">
+        <div
+          class="rounded-circle bg-success bg-opacity-10 d-inline-flex align-items-center justify-content-center mx-auto mb-3"
+          style="width: 80px; height: 80px;">
+          <i class="bi bi-lightbulb fs-1 text-success"></i>
+        </div>
+        <h4>3. Get Advice</h4>
+        <p class="text-muted mb-0">
+          We tell you which card to use for each purchase category
+          and how much you need to spend to cover your subscriptions.
+        </p>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- Stats Section -->
+<div class="bg-light py-5">
+  <div class="container">
+    <div class="row text-center g-4">
+      <div class="col-md-4">
+        <h2 class="display-5 fw-bold text-primary">15+</h2>
+        <p class="text-muted mb-0">Canadian Credit Cards</p>
+      </div>
+      <div class="col-md-4">
+        <h2 class="display-5 fw-bold text-danger">17+</h2>
+        <p class="text-muted mb-0">Popular Subscriptions</p>
+      </div>
+      <div class="col-md-4">
+        <h2 class="display-5 fw-bold text-success">$0</h2>
+        <p class="text-muted mb-0">Completely Free</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="container py-5">
+  <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+    <div class="card-body text-center text-white py-5">
+      <h2 class="mb-3">Ready to Stop Wasting Points?</h2>
+      <p class="lead mb-4 opacity-75">
+        Join now and start using your credit card rewards smarter.
+      </p>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('dashboard') }}" class="btn btn-light btn-lg px-5">
+        Go to Dashboard
+      </a>
+      {% else %}
+      <a href="{{ url_for('signup') }}" class="btn btn-light btn-lg px-5">
+        Create Free Account
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
 {% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}My Subscriptions{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h2 fw-bold">My Subscriptions</h1>
+            <p class="text-muted mb-0">Track the subscriptions you want to cover with points</p>
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- User's Subscriptions Section -->
+    {% if user_subs %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-collection-play me-2 text-danger"></i>Tracking</h5>
+            <span class="badge bg-danger">
+                Total: ${{ "%.2f"|format(user_subs|sum(attribute='subscription.monthly_cost_cad')) }}/month
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                {% for us in user_subs %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border"
+                        style="border-left: 4px solid {{ us.subscription.color or '#6c757d' }} !important;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2"
+                                        style="width: 40px; height: 40px; background: {{ us.subscription.color or '#6c757d' }}20;">
+                                        <i class="bi {{ us.subscription.icon or 'bi-app' }} fs-5"
+                                            style="color: {{ us.subscription.color or '#6c757d' }};"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="card-title mb-0">{{ us.subscription.name }}</h6>
+                                        <span class="badge bg-secondary small">{{ us.subscription.category }}</span>
+                                    </div>
+                                </div>
+                                <form action="{{ url_for('remove_subscription', user_sub_id=us.id) }}" method="POST"
+                                    class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Stop tracking">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <p class="text-muted small mb-2">{{ us.subscription.description }}</p>
+
+                            <div class="d-flex justify-content-between align-items-end">
+                                <div>
+                                    <p class="text-muted small mb-0">Monthly Cost</p>
+                                    <h4 class="mb-0" style="color: {{ us.subscription.color or '#6c757d' }};">
+                                        ${{ "%.2f"|format(us.subscription.monthly_cost_cad) }}
+                                    </h4>
+                                </div>
+                                <div class="text-end">
+                                    <p class="text-muted small mb-0">Points Needed</p>
+                                    <p class="fw-bold mb-0">~{{ "{:,}".format((us.subscription.monthly_cost_cad *
+                                        100)|int) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Subscriptions Section -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0">
+            <h5 class="mb-0"><i class="bi bi-plus-circle me-2 text-success"></i>Add a Subscription</h5>
+        </div>
+        <div class="card-body">
+            <!-- Category Filter Tabs -->
+            <ul class="nav nav-pills mb-4" id="categoryTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-filter="all">All</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="streaming">
+                        <i class="bi bi-play-circle me-1"></i>Streaming
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="social">
+                        <i class="bi bi-people me-1"></i>Social
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-filter="productivity">
+                        <i class="bi bi-briefcase me-1"></i>Productivity
+                    </button>
+                </li>
+            </ul>
+
+            <div class="row g-3" id="subGrid">
+                {% for sub in all_subs %}
+                <div class="col-md-6 col-lg-4 sub-item" data-category="{{ sub.category }}">
+                    <div
+                        class="card h-100 {% if sub.id in user_sub_ids %}border-success bg-success bg-opacity-10{% else %}border{% endif %}">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                    style="width: 50px; height: 50px; background: {{ sub.color or '#6c757d' }}20;">
+                                    <i class="bi {{ sub.icon or 'bi-app' }} fs-4"
+                                        style="color: {{ sub.color or '#6c757d' }};"></i>
+                                </div>
+                                <div>
+                                    <h6 class="card-title mb-1">{{ sub.name }}</h6>
+                                    <span class="badge" style="background: {{ sub.color or '#6c757d' }};">{{
+                                        sub.category }}</span>
+                                </div>
+                            </div>
+
+                            <p class="text-muted small mb-3">{{ sub.description }}</p>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <span class="h4 mb-0">${{ "%.2f"|format(sub.monthly_cost_cad) }}</span>
+                                    <span class="text-muted small">/month</span>
+                                </div>
+                                <span class="badge bg-light text-dark">
+                                    ~{{ "{:,}".format((sub.monthly_cost_cad * 100)|int) }} pts
+                                </span>
+                            </div>
+
+                            {% if sub.id in user_sub_ids %}
+                            <button class="btn btn-success btn-sm w-100" disabled>
+                                <i class="bi bi-check-lg me-1"></i>Tracking
+                            </button>
+                            {% else %}
+                            <form action="{{ url_for('add_subscription', sub_id=sub.id) }}" method="POST">
+                                <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                    <i class="bi bi-plus-lg me-1"></i>Track This
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Category filter functionality
+    document.querySelectorAll('#categoryTabs .nav-link').forEach(btn => {
+        btn.addEventListener('click', function () {
+            // Update active state
+            document.querySelectorAll('#categoryTabs .nav-link').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Filter subscriptions
+            const filter = this.dataset.filter;
+            document.querySelectorAll('.sub-item').forEach(sub => {
+                if (filter === 'all' || sub.dataset.category === filter) {
+                    sub.style.display = 'block';
+                } else {
+                    sub.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

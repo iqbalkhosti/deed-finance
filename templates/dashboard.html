@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Welcome Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="display-6 fw-bold">Welcome back, {{ current_user.first_name }}! 👋</h1>
+      <p class="text-muted mb-0">Here's your points overview</p>
+    </div>
+  </div>
+
+  <!-- Stats Cards Row -->
+  <div class="row g-4 mb-4">
+    <!-- Total Points Card -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body text-white">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-white-50 mb-1">Total Points</p>
+              <h2 class="display-5 fw-bold mb-0">{{ "{:,}".format(total_points) }}</h2>
+            </div>
+            <div class="bg-white bg-opacity-25 rounded-circle p-3">
+              <i class="bi bi-stars fs-3"></i>
+            </div>
+          </div>
+          <p class="mt-3 mb-0 small">
+            <span class="text-white-50">Across {{ user_cards|length }} card(s)</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Subscriptions Card -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+        <div class="card-body text-white">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-white-50 mb-1">Monthly Subscriptions</p>
+              <h2 class="display-5 fw-bold mb-0">${{ "%.2f"|format(total_monthly_cost) }}</h2>
+            </div>
+            <div class="bg-white bg-opacity-25 rounded-circle p-3">
+              <i class="bi bi-credit-card fs-3"></i>
+            </div>
+          </div>
+          <p class="mt-3 mb-0 small">
+            <span class="text-white-50">{{ user_subs|length }} subscription(s) tracked</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coverage Card -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <div class="card-body text-white">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <p class="text-white-50 mb-1">Points Coverage</p>
+              <h2 class="display-5 fw-bold mb-0">{{ coverage_percent }}%</h2>
+            </div>
+            <div class="bg-white bg-opacity-25 rounded-circle p-3">
+              <i class="bi bi-pie-chart fs-3"></i>
+            </div>
+          </div>
+          <div class="progress mt-3" style="height: 6px; background: rgba(255,255,255,0.3);">
+            <div class="progress-bar bg-white" style="width: {{ coverage_percent }}%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Quick Actions</h5>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('my_cards') }}" class="btn btn-outline-primary">
+              <i class="bi bi-credit-card me-2"></i>Manage Cards
+            </a>
+            <a href="{{ url_for('my_subscriptions') }}" class="btn btn-outline-danger">
+              <i class="bi bi-collection-play me-2"></i>Manage Subscriptions
+            </a>
+            <a href="{{ url_for('advisor') }}" class="btn btn-success">
+              <i class="bi bi-lightbulb me-2"></i>Get Spending Advice
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Two Column Layout -->
+  <div class="row g-4">
+    <!-- My Cards Preview -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">My Cards</h5>
+          <a href="{{ url_for('my_cards') }}" class="btn btn-sm btn-link">View All</a>
+        </div>
+        <div class="card-body">
+          {% if user_cards %}
+            {% for uc in user_cards[:3] %}
+            <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+              <div>
+                <p class="mb-0 fw-medium">{{ uc.credit_card.name }}</p>
+                <small class="text-muted">{{ uc.credit_card.bank }}</small>
+              </div>
+              <div class="text-end">
+                <p class="mb-0 fw-bold text-primary">{{ "{:,}".format(uc.current_points) }}</p>
+                <small class="text-muted">points</small>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-credit-card text-muted" style="font-size: 3rem;"></i>
+              <p class="text-muted mt-2 mb-0">No cards added yet</p>
+              <a href="{{ url_for('my_cards') }}" class="btn btn-primary btn-sm mt-2">Add Your First Card</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- My Subscriptions Preview -->
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">My Subscriptions</h5>
+          <a href="{{ url_for('my_subscriptions') }}" class="btn btn-sm btn-link">View All</a>
+        </div>
+        <div class="card-body">
+          {% if user_subs %}
+            {% for us in user_subs[:3] %}
+            <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+              <div class="d-flex align-items-center">
+                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                     style="width: 40px; height: 40px; background: {{ us.subscription.color or '#6c757d' }}20;">
+                  <i class="bi {{ us.subscription.icon or 'bi-app' }}" style="color: {{ us.subscription.color or '#6c757d' }};"></i>
+                </div>
+                <div>
+                  <p class="mb-0 fw-medium">{{ us.subscription.name }}</p>
+                  <small class="text-muted">{{ us.subscription.category }}</small>
+                </div>
+              </div>
+              <div class="text-end">
+                <p class="mb-0 fw-bold">${{ "%.2f"|format(us.subscription.monthly_cost_cad) }}</p>
+                <small class="text-muted">/month</small>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-collection-play text-muted" style="font-size: 3rem;"></i>
+              <p class="text-muted mt-2 mb-0">No subscriptions tracked yet</p>
+              <a href="{{ url_for('my_subscriptions') }}" class="btn btn-danger btn-sm mt-2">Track Your First Subscription</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
