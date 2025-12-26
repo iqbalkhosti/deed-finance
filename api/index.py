@@ -6,10 +6,66 @@ import sys
 import os
 
 # Add the parent directory to the path so we can import app
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
-from app import app
+# Set up basic logging
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Vercel expects the app to be exported as 'handler' or 'app'
-# Export it as 'handler' for compatibility
-handler = app
+logger.info(f"Starting Vercel function handler")
+logger.info(f"Python path: {sys.path}")
+logger.info(f"Working directory: {os.getcwd()}")
+logger.info(f"Parent directory: {parent_dir}")
+
+try:
+    logger.info("Attempting to import app...")
+    from app import app
+    logger.info("Successfully imported app")
+    
+    # Vercel expects the app to be exported as 'handler' or 'app'
+    # Export it as 'handler' for compatibility
+    handler = app
+    logger.info("Handler exported successfully")
+    
+except ImportError as e:
+    logger.error(f"Import error: {e}")
+    import traceback
+    traceback.print_exc()
+    # If import fails, create a minimal error handler
+    from flask import Flask, jsonify
+    error_app = Flask(__name__)
+    
+    @error_app.route('/', defaults={'path': ''})
+    @error_app.route('/<path:path>')
+    def error_handler(path):
+        return jsonify({
+            'error': 'Application initialization failed',
+            'message': str(e),
+            'type': 'ImportError',
+            'path': path
+        }), 500
+    
+    handler = error_app
+    
+except Exception as e:
+    logger.error(f"Unexpected error: {e}")
+    import traceback
+    traceback.print_exc()
+    # If import fails, create a minimal error handler
+    from flask import Flask, jsonify
+    error_app = Flask(__name__)
+    
+    @error_app.route('/', defaults={'path': ''})
+    @error_app.route('/<path:path>')
+    def error_handler(path):
+        return jsonify({
+            'error': 'Application initialization failed',
+            'message': str(e),
+            'type': type(e).__name__,
+            'path': path
+        }), 500
+    
+    handler = error_app

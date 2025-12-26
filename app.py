@@ -27,31 +27,53 @@ app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
 app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
 app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@deed.com")
 
-# Initialize Flask-Mail
-mail.init_app(app)
+# Initialize Flask-Mail (only if not in dev mode or if mail config is provided)
+try:
+    mail.init_app(app)
+except Exception as e:
+    print(f"Warning: Could not initialize Flask-Mail: {e}")
 
 # Database setup - handle Vercel serverless environment
 # On Vercel, we need to use /tmp for writable files
 # Note: SQLite on Vercel is not ideal for production - consider using Vercel Postgres or another cloud database
 # Check for Vercel environment (VERCEL or VERCEL_ENV are set by Vercel)
+# Also check if we're in a serverless environment by checking if /tmp exists and is writable
 is_vercel = os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
-if is_vercel:
+if is_vercel or (os.path.exists("/tmp") and os.access("/tmp", os.W_OK)):
     # Vercel serverless environment - use /tmp directory
     db_path = "/tmp/clients.db"
+    # Ensure /tmp directory exists
+    try:
+        os.makedirs("/tmp", exist_ok=True)
+    except:
+        pass
 else:
     # Local development
     db_path = "clients.db"
 
-database_url = f"sqlite:///{db_path}"
-engine = create_engine(database_url, echo=False)
-Session = sessionmaker(bind=engine)
+try:
+    database_url = f"sqlite:///{db_path}"
+    engine = create_engine(database_url, echo=False, connect_args={"check_same_thread": False})
+    Session = sessionmaker(bind=engine)
+    print(f"Database initialized at: {db_path}")
+except Exception as e:
+    print(f"ERROR: Failed to create database engine: {e}")
+    import traceback
+    traceback.print_exc()
+    # Create a fallback in-memory database (data won't persist)
+    database_url = "sqlite:///:memory:"
+    engine = create_engine(database_url, echo=False)
+    Session = sessionmaker(bind=engine)
 
 # Initialize database tables if they don't exist
 # This is safe to run on every cold start
 try:
     Base.metadata.create_all(engine)
+    print("Database tables initialized successfully")
 except Exception as e:
     print(f"Warning: Could not initialize database tables: {e}")
+    import traceback
+    traceback.print_exc()
 
 # Extensions
 bcrypt = Bcrypt(app)
@@ -76,6 +98,26 @@ def load_user(user_id):
 def index():
     """Landing page."""
     return render_template("index.html")
+
+
+@app.route("/health")
+def health():
+    """Health check endpoint for debugging."""
+    try:
+        # Test database connection
+        with Session() as session:
+            from sqlalchemy import text
+            session.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return jsonify({
+        "status": "ok",
+        "database": db_path,
+        "vercel": bool(is_vercel),
+        "db_status": db_status
+    }), 200
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -589,6 +631,20 @@ def calculate_points():
             "coverage": coverage
         })
 
+
+# =============================================================================
+# Error Handlers
+# =============================================================================
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors."""
+    return render_template('index.html'), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 errors."""
+    return render_template('index.html'), 404
 
 # =============================================================================
 # Run App
