@@ -11,17 +11,47 @@ from sqlalchemy.orm import sessionmaker
 
 from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
 from forms import SignupForm, LoginForm, VerificationForm
-from email_utils import generate_verification_code, get_code_expiry, send_verification_email
+from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
 
 import os
 
 # App setup
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
 
-# Database setup
-engine = create_engine("sqlite:///clients.db", echo=False)
+# Email configuration
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@deed.com")
+
+# Initialize Flask-Mail
+mail.init_app(app)
+
+# Database setup - handle Vercel serverless environment
+# On Vercel, we need to use /tmp for writable files
+# Note: SQLite on Vercel is not ideal for production - consider using Vercel Postgres or another cloud database
+# Check for Vercel environment (VERCEL or VERCEL_ENV are set by Vercel)
+is_vercel = os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
+if is_vercel:
+    # Vercel serverless environment - use /tmp directory
+    db_path = "/tmp/clients.db"
+else:
+    # Local development
+    db_path = "clients.db"
+
+database_url = f"sqlite:///{db_path}"
+engine = create_engine(database_url, echo=False)
 Session = sessionmaker(bind=engine)
+
+# Initialize database tables if they don't exist
+# This is safe to run on every cold start
+try:
+    Base.metadata.create_all(engine)
+except Exception as e:
+    print(f"Warning: Could not initialize database tables: {e}")
 
 # Extensions
 bcrypt = Bcrypt(app)

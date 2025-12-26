@@ -10,5 +10,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app import app
 
-# Vercel expects the app to be named 'app' or 'handler'
-# The @vercel/python runtime will automatically use this
+# Vercel expects the app to be exported as 'handler' or 'app'
+# Export it as 'handler' for compatibility
+handler = app
