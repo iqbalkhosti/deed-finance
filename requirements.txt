@@ -1,8 +1,23 @@
-Flask
-gunicorn
-sqlalchemy
-python-dotenv
-pymysql
-Flask-Mail
-Flask-Bcrypt
-Flask-Login
+# Core Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Database
+SQLAlchemy==2.0.23
+
+# Authentication & Security
+Flask-Bcrypt==1.0.1
+Flask-Login==0.6.3
+
+# Forms
+WTForms==3.1.1
+email-validator==2.1.0
+
+# Email
+Flask-Mail==0.9.1
+
+# Environment
+python-dotenv==1.0.0
+
+# Production Server
+gunicorn==21.2.0

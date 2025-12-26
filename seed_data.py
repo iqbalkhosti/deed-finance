@@ -229,10 +229,17 @@ def seed_card_bonuses():
         ("RBC ION+ Visa", "Transit", 3.0),
         ("RBC ION+ Visa", "Recurring Bills", 3.0),
         
-        # BMO CashBack World Elite
+    # BMO CashBack World Elite
         ("BMO CashBack World Elite Mastercard", "Groceries", 5.0),
-        ("BMO CashBack World Elite Mastercard", "Transit", 5.0),
-        ("BMO CashBack World Elite Mastercard", "Recurring Bills", 3.0),
+        ("BMO CashBack World Elite Mastercard", "Transit", 4.0),
+        ("BMO CashBack World Elite Mastercard", "Gas", 3.0),
+        ("BMO CashBack World Elite Mastercard", "Recurring Bills", 2.0),
+        
+        # BMO eclipse Visa Infinite
+        ("BMO eclipse Visa Infinite", "Dining", 5.0),
+        ("BMO eclipse Visa Infinite", "Groceries", 5.0),
+        ("BMO eclipse Visa Infinite", "Gas", 5.0),
+        ("BMO eclipse Visa Infinite", "Transit", 5.0),
         
         # TD Cash Back
         ("TD Cash Back Visa Infinite", "Groceries", 3.0),
@@ -244,9 +251,17 @@ def seed_card_bonuses():
         ("TD Aeroplan Visa Infinite", "Gas", 1.5),
         ("TD Aeroplan Visa Infinite", "Groceries", 1.5),
         
+        # TD First Class Travel
+        ("TD First Class Travel Visa Infinite", "Travel", 8.0), # Expedia for TD
+        ("TD First Class Travel Visa Infinite", "Groceries", 6.0),
+        ("TD First Class Travel Visa Infinite", "Dining", 6.0),
+        ("TD First Class Travel Visa Infinite", "Recurring Bills", 4.0),
+
         # CIBC Dividend
         ("CIBC Dividend Visa Infinite", "Groceries", 4.0),
         ("CIBC Dividend Visa Infinite", "Gas", 4.0),
+        ("CIBC Dividend Visa Infinite", "Dining", 2.0),
+        ("CIBC Dividend Visa Infinite", "Transit", 2.0),
         ("CIBC Dividend Visa Infinite", "Recurring Bills", 2.0),
         
         # CIBC Costco
@@ -254,15 +269,19 @@ def seed_card_bonuses():
         ("CIBC Costco Mastercard", "Dining", 3.0),
         
         # Scotiabank Gold Amex
-        ("Scotiabank Gold American Express", "Groceries", 5.0),
+        ("Scotiabank Gold American Express", "Groceries", 5.0), # 6x at Sobeys/etc, 5x other groceries/dining
         ("Scotiabank Gold American Express", "Dining", 5.0),
         ("Scotiabank Gold American Express", "Entertainment", 3.0),
+        ("Scotiabank Gold American Express", "Gas", 3.0),
+        ("Scotiabank Gold American Express", "Transit", 3.0),
+        ("Scotiabank Gold American Express", "Recurring Bills", 3.0), # Includes streaming services 
         
         # Scotia Momentum
         ("Scotia Momentum Visa Infinite", "Groceries", 4.0),
         ("Scotia Momentum Visa Infinite", "Recurring Bills", 4.0),
         ("Scotia Momentum Visa Infinite", "Drug Stores", 4.0),
         ("Scotia Momentum Visa Infinite", "Gas", 2.0),
+        ("Scotia Momentum Visa Infinite", "Transit", 2.0),
     ]
     
     session = Session()
@@ -299,6 +318,12 @@ def seed_card_bonuses():
 def seed_subscriptions():
     """Seed common subscription services with CAD pricing."""
     subscriptions = [
+        # AI & Productivity
+        {"name": "ChatGPT Plus", "category": "productivity", "monthly_cost_cad": 28.00, 
+         "icon": "bi-robot", "color": "#10A37F", "description": "GPT-4, DALL-E, Analysis"},
+        {"name": "Claude Pro", "category": "productivity", "monthly_cost_cad": 28.00, 
+         "icon": "bi-stars", "color": "#D97757", "description": "Claude 3 Opus, 5x usage"},
+         
         # Streaming
         {"name": "Netflix Standard", "category": "streaming", "monthly_cost_cad": 16.49, 
          "icon": "bi-play-circle", "color": "#E50914", "description": "1080p streaming, 2 screens"},

@@ -1,5 +1,5 @@
 """
-Deed Leisure - Subscription Points Planner
+Deed Finance - Subscription Points Planner
 A web app that helps users understand how to use credit card points to cover subscriptions.
 """
 from datetime import datetime
@@ -13,9 +13,11 @@ from models import Base, Client, CreditCard, Subscription, SpendingCategory, Car
 from forms import SignupForm, LoginForm, VerificationForm
 from email_utils import generate_verification_code, get_code_expiry, send_verification_email
 
+import os
+
 # App setup
 app = Flask(__name__, template_folder="templates")
-app.config["SECRET_KEY"] = "my very secret key"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
 
 # Database setup
 engine = create_engine("sqlite:///clients.db", echo=False)

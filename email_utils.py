@@ -1,5 +1,5 @@
 """
-Email utilities for Deed Leisure.
+Email utilities for Deed Finance.
 Handles verification code generation and email sending.
 In development mode, codes are printed to console instead of sent via email.
 """
@@ -9,10 +9,12 @@ from datetime import datetime, timedelta
 from flask import current_app
 from flask_mail import Mail, Message
 
+import os
+
 mail = Mail()
 
-# Development mode flag - set to False when you have SMTP configured
-DEV_MODE = True
+# Development mode flag - set DEV_MODE=false in production environment when SMTP is configured
+DEV_MODE = os.environ.get("DEV_MODE", "true").lower() == "true"
 
 
 def generate_verification_code():
