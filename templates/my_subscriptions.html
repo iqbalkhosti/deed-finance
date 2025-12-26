@@ -3,7 +3,7 @@
 {% block title %}My Subscriptions{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 animate-fade-in">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -39,8 +39,8 @@
                                             style="color: {{ us.subscription.color or '#6c757d' }};"></i>
                                     </div>
                                     <div>
-                                        <h6 class="card-title mb-0">{{ us.subscription.name }}</h6>
-                                        <span class="badge bg-secondary small">{{ us.subscription.category }}</span>
+                                        <h6 class="card-title fw-bold mb-0">{{ us.subscription.name }}</h6>
+                                        <span class="badge badge-soft small">{{ us.subscription.category }}</span>
                                     </div>
                                 </div>
                                 <form action="{{ url_for('remove_subscription', user_sub_id=us.id) }}" method="POST"
@@ -107,17 +107,18 @@
                 {% for sub in all_subs %}
                 <div class="col-md-6 col-lg-4 sub-item" data-category="{{ sub.category }}">
                     <div
-                        class="card h-100 {% if sub.id in user_sub_ids %}border-success bg-success bg-opacity-10{% else %}border{% endif %}">
+                        class="card h-100 border-0 shadow-sm card-hover {% if sub.id in user_sub_ids %}bg-success bg-opacity-10{% endif %}">
                         <div class="card-body">
                             <div class="d-flex align-items-start mb-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm"
                                     style="width: 50px; height: 50px; background: {{ sub.color or '#6c757d' }}20;">
                                     <i class="bi {{ sub.icon or 'bi-app' }} fs-4"
                                         style="color: {{ sub.color or '#6c757d' }};"></i>
                                 </div>
                                 <div>
-                                    <h6 class="card-title mb-1">{{ sub.name }}</h6>
-                                    <span class="badge" style="background: {{ sub.color or '#6c757d' }};">{{
+                                    <h6 class="card-title fw-bold mb-1">{{ sub.name }}</h6>
+                                    <span class="badge badge-soft"
+                                        style="color: {{ sub.color or '#6c757d' }}; background: {{ sub.color or '#6c757d' }}20;">{{
                                         sub.category }}</span>
                                 </div>
                             </div>
@@ -126,10 +127,10 @@
 
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <span class="h4 mb-0">${{ "%.2f"|format(sub.monthly_cost_cad) }}</span>
+                                    <span class="h4 mb-0 fw-bold">${{ "%.2f"|format(sub.monthly_cost_cad) }}</span>
                                     <span class="text-muted small">/month</span>
                                 </div>
-                                <span class="badge bg-light text-dark">
+                                <span class="badge bg-light text-dark shadow-sm border">
                                     ~{{ "{:,}".format((sub.monthly_cost_cad * 100)|int) }} pts
                                 </span>
                             </div>

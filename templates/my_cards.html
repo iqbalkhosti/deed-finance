@@ -3,7 +3,7 @@
 {% block title %}My Cards{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 animate-fade-in">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -25,12 +25,13 @@
             <div class="row g-3">
                 {% for uc in user_cards %}
                 <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border" style="border-left: 4px solid #667eea !important;">
+                    <div class="card h-100 border-0 shadow-sm card-hover"
+                        style="border-left: 5px solid #667eea !important;">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <h6 class="card-title mb-1">{{ uc.credit_card.name }}</h6>
-                                    <span class="badge bg-secondary">{{ uc.credit_card.bank }}</span>
+                                    <h6 class="card-title fw-bold mb-1">{{ uc.credit_card.name }}</h6>
+                                    <span class="badge badge-soft">{{ uc.credit_card.bank }}</span>
                                 </div>
                                 <form action="{{ url_for('remove_card', user_card_id=uc.id) }}" method="POST"
                                     class="d-inline">
@@ -103,14 +104,15 @@
                 {% for card in all_cards %}
                 <div class="col-md-6 col-lg-4 card-item" data-bank="{{ card.bank }}">
                     <div
-                        class="card h-100 {% if card.id in user_card_ids %}border-success bg-success bg-opacity-10{% else %}border{% endif %}">
+                        class="card h-100 border-0 shadow-sm card-hover {% if card.id in user_card_ids %}bg-success bg-opacity-10{% endif %}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge bg-primary">{{ card.bank }}</span>
+                                <span class="badge badge-soft">{{ card.bank }}</span>
                                 {% if card.annual_fee > 0 %}
-                                <span class="badge bg-warning text-dark">${{ "%.0f"|format(card.annual_fee) }}/yr</span>
+                                <span class="badge bg-warning text-dark shadow-sm">${{ "%.0f"|format(card.annual_fee)
+                                    }}/yr</span>
                                 {% else %}
-                                <span class="badge bg-success">No Fee</span>
+                                <span class="badge bg-success shadow-sm">No Fee</span>
                                 {% endif %}
                             </div>
 

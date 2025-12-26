@@ -68,9 +68,17 @@ def seed_credit_cards():
             "name": "RBC ION Visa",
             "bank": "RBC",
             "annual_fee": 0.0,
-            "points_name": "ION Points",
+            "points_name": "Avion Points",
             "base_earn_rate": 1.0,
-            "point_value_cents": 0.7,
+            "point_value_cents": 1.0, # Avion points are worth 1 cent usually
+        },
+        {
+            "name": "RBC ION+ Visa",
+            "bank": "RBC",
+            "annual_fee": 48.0, # $4/month
+            "points_name": "Avion Points",
+            "base_earn_rate": 1.0,
+            "point_value_cents": 1.0,
         },
         # BMO Cards
         {
@@ -180,8 +188,19 @@ def seed_credit_cards():
             existing = session.query(CreditCard).filter_by(name=card_data["name"]).first()
             if not existing:
                 session.add(CreditCard(**card_data))
+                print(f"Added new card: {card_data['name']}")
+            else:
+                # Update existing card details
+                updated = False
+                for key, value in card_data.items():
+                    if getattr(existing, key) != value:
+                        setattr(existing, key, value)
+                        updated = True
+                if updated:
+                    print(f"Updated card: {card_data['name']}")
+                    
         session.commit()
-        print(f"✅ Seeded {len(cards)} credit cards!")
+        print(f"✅ Processed {len(cards)} credit cards!")
     finally:
         session.close()
 
@@ -196,6 +215,19 @@ def seed_card_bonuses():
         
         # RBC Cash Back - 2% groceries
         ("RBC Cash Back Mastercard", "Groceries", 2.0),
+        
+        # RBC ION Visa - 1.5x on Groceries, Gas, Transit, Streaming (Recuring Bills)
+        ("RBC ION Visa", "Groceries", 1.5),
+        ("RBC ION Visa", "Gas", 1.5),
+        ("RBC ION Visa", "Transit", 1.5),
+        ("RBC ION Visa", "Recurring Bills", 1.5), 
+
+        # RBC ION+ Visa - 3x on Groceries, Dining, Gas, Transit, Streaming
+        ("RBC ION+ Visa", "Groceries", 3.0),
+        ("RBC ION+ Visa", "Dining", 3.0),
+        ("RBC ION+ Visa", "Gas", 3.0),
+        ("RBC ION+ Visa", "Transit", 3.0),
+        ("RBC ION+ Visa", "Recurring Bills", 3.0),
         
         # BMO CashBack World Elite
         ("BMO CashBack World Elite Mastercard", "Groceries", 5.0),
@@ -235,6 +267,7 @@ def seed_card_bonuses():
     
     session = Session()
     try:
+        count = 0
         for card_name, category_name, earn_rate in bonuses:
             card = session.query(CreditCard).filter_by(name=card_name).first()
             category = session.query(SpendingCategory).filter_by(name=category_name).first()
@@ -244,14 +277,21 @@ def seed_card_bonuses():
                     credit_card_id=card.id, 
                     category_id=category.id
                 ).first()
+                
                 if not existing:
                     session.add(CardBonus(
                         credit_card_id=card.id,
                         category_id=category.id,
                         earn_rate=earn_rate
                     ))
+                    count += 1
+                else:
+                    if existing.earn_rate != earn_rate:
+                        existing.earn_rate = earn_rate
+                        count += 1
+                        
         session.commit()
-        print(f"✅ Seeded {len(bonuses)} card bonus categories!")
+        print(f"✅ Processed/Updated {len(bonuses)} card bonus categories!")
     finally:
         session.close()
 
