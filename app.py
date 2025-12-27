@@ -17,7 +17,7 @@ import os
 
 # App setup
 app = Flask(__name__, template_folder="templates", static_folder="static")
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "b2a9d8ec6909f5221628107c3e3abad40c168229b18d0f651b3ffa249a0af8a9")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-key")
 
 # Email configuration
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
