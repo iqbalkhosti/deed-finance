@@ -4,6 +4,7 @@ This file exposes the Flask app for Vercel's Python runtime.
 """
 import sys
 import os
+from app import app 
 
 # Add the parent directory to the path so we can import app
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +28,7 @@ try:
     
     # Vercel expects the app to be exported as 'handler' or 'app'
     # Export it as 'handler' for compatibility
-    handler = app
+    
     logger.info("Handler exported successfully")
     
 except ImportError as e:
@@ -48,7 +49,7 @@ except ImportError as e:
             'path': path
         }), 500
     
-    handler = error_app
+    
     
 except Exception as e:
     logger.error(f"Unexpected error: {e}")
@@ -68,4 +69,4 @@ except Exception as e:
             'path': path
         }), 500
     
-    handler = error_app
+    
