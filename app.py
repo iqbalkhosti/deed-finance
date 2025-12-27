@@ -2,6 +2,7 @@
 Deed Finance - Subscription Points Planner
 A web app that helps users understand how to use credit card points to cover subscriptions.
 """
+
 from datetime import datetime
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify, session as flask_session
 from flask_bcrypt import Bcrypt
@@ -645,6 +646,22 @@ def internal_error(error):
 def not_found(error):
     """Handle 404 errors."""
     return render_template('index.html'), 404
+
+
+# error handling
+
+import traceback
+# from flask import jsonify, request
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    return jsonify({
+        "error": "Unhandled exception",
+        "type": type(e).__name__,
+        "message": str(e),
+        "path": request.path,
+        "traceback": traceback.format_exc()
+    }), 500
 
 # =============================================================================
 # Run App
