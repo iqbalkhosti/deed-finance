@@ -12,11 +12,97 @@ from sqlalchemy.orm import sessionmaker
 import traceback
 import os
 
-from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
-from forms import SignupForm, LoginForm, VerificationForm
-from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
+# #region agent log
+import json
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:18","message":"About to import models","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: About to import models")
+# #endregion
+
+try:
+    from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:23","message":"Models imported","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    print("DEBUG: Models imported successfully")
+    # #endregion
+except Exception as e:
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:28","message":"Models import failed","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    print(f"DEBUG ERROR: Models import failed - {e}")
+    # #endregion
+    raise
+
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"C","location":"app.py:35","message":"About to import forms","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: About to import forms")
+# #endregion
+
+try:
+    from forms import SignupForm, LoginForm, VerificationForm
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"C","location":"app.py:42","message":"Forms imported","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    print("DEBUG: Forms imported successfully")
+    # #endregion
+except Exception as e:
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"C","location":"app.py:47","message":"Forms import failed","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    print(f"DEBUG ERROR: Forms import failed - {e}")
+    # #endregion
+    raise
+
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"D","location":"app.py:52","message":"About to import email_utils","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: About to import email_utils")
+# #endregion
+
+try:
+    from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"D","location":"app.py:59","message":"Email utils imported","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    print("DEBUG: Email utils imported successfully")
+    # #endregion
+except Exception as e:
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"D","location":"app.py:64","message":"Email utils import failed","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    print(f"DEBUG ERROR: Email utils import failed - {e}")
+    # #endregion
+    raise
 
 # App setup
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"E","location":"app.py:72","message":"Creating Flask app","data":{"templates_exist":os.path.exists("templates"),"static_exist":os.path.exists("static")},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: Creating Flask app instance")
+# #endregion
+
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-key")
 
@@ -39,6 +125,14 @@ except Exception as e:
 # Note: SQLite on Vercel is not ideal for production - consider using Vercel Postgres or another cloud database
 # Check for Vercel environment (VERCEL or VERCEL_ENV are set by Vercel)
 # Also check if we're in a serverless environment by checking if /tmp exists and is writable
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:80","message":"Starting database setup","data":{"vercel_env":os.environ.get("VERCEL"),"vercel_env_var":os.environ.get("VERCEL_ENV"),"tmp_exists":os.path.exists("/tmp")},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: Starting database setup")
+# #endregion
+
 is_vercel = os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
 if is_vercel or (os.path.exists("/tmp") and os.access("/tmp", os.W_OK)):
     # Vercel serverless environment - use /tmp directory
@@ -52,12 +146,32 @@ else:
     # Local development
     db_path = "clients.db"
 
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:95","message":"About to create engine","data":{"db_path":db_path,"is_vercel":bool(is_vercel)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print(f"DEBUG: Creating database engine at {db_path}")
+# #endregion
+
 try:
     database_url = f"sqlite:///{db_path}"
     engine = create_engine(database_url, echo=False, connect_args={"check_same_thread": False})
     Session = sessionmaker(bind=engine)
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:103","message":"Database engine created","data":{"db_path":db_path},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
     print(f"Database initialized at: {db_path}")
 except Exception as e:
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:109","message":"Database engine creation failed","data":{"error":str(e),"error_type":type(e).__name__},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
     print(f"ERROR: Failed to create database engine: {e}")
     import traceback
     traceback.print_exc()
@@ -68,20 +182,56 @@ except Exception as e:
 
 # Initialize database tables if they don't exist
 # This is safe to run on every cold start
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:120","message":"About to create tables","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: Creating database tables")
+# #endregion
+
 try:
     Base.metadata.create_all(engine)
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:127","message":"Tables created successfully","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
     print("Database tables initialized successfully")
 except Exception as e:
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:133","message":"Table creation failed","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
     print(f"Warning: Could not initialize database tables: {e}")
     import traceback
     traceback.print_exc()
 
 # Extensions
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"A","location":"app.py:142","message":"Initializing extensions","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: Initializing Flask extensions")
+# #endregion
+
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 login_manager.login_message = "Please log in to access this page."
 login_manager.login_message_category = "info"
+
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"A","location":"app.py:151","message":"App initialization complete","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: App initialization complete")
+# #endregion
 
 
 @login_manager.user_loader
@@ -119,6 +269,35 @@ def health():
         "vercel": bool(is_vercel),
         "db_status": db_status
     }), 200
+
+
+@app.route("/debug-init")
+def debug_init():
+    """Debug endpoint to check initialization status."""
+    init_status = {
+        "handler_exists": "handler" in globals() if 'globals' in dir() else "unknown",
+        "app_created": app is not None,
+        "app_type": type(app).__name__ if app else None,
+        "database_path": db_path if 'db_path' in globals() else "not_set",
+        "is_vercel": bool(is_vercel) if 'is_vercel' in globals() else "unknown",
+        "engine_exists": "engine" in globals() if 'globals' in dir() else "unknown",
+        "session_exists": "Session" in globals() if 'globals' in dir() else "unknown",
+    }
+    
+    # Test database
+    try:
+        if 'Session' in globals():
+            with Session() as session:
+                from sqlalchemy import text
+                session.execute(text("SELECT 1"))
+            init_status["db_test"] = "success"
+        else:
+            init_status["db_test"] = "Session not available"
+    except Exception as e:
+        init_status["db_test"] = f"error: {str(e)}"
+        init_status["db_error_type"] = type(e).__name__
+    
+    return jsonify(init_status), 200
 
 
 @app.route("/signup", methods=["GET", "POST"])
