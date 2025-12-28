@@ -1,6 +1,6 @@
 # Core Framework
-Flask==3.0.0
-Werkzeug==3.0.1
+Flask==2.3.3
+Werkzeug==2.3.7
 
 # Database
 SQLAlchemy==2.0.23

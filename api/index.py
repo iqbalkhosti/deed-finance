@@ -228,14 +228,18 @@ if _handler is None:
     print("DEBUG CRITICAL ERROR: Handler is None at export time! Using fallback.")
     handler = create_fallback_handler()
 else:
+    # Vercel's Python runtime expects the handler to be the Flask app directly
+    # Export as both 'handler' and 'app' for maximum compatibility
     handler = _handler
+    # Also export as 'app' in case Vercel checks for that
+    app = _handler
 
 # #region agent log
 try:
     with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
-        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"A","location":"api/index.py:210","message":"Handler export complete","data":{"handler_type":type(handler).__name__,"handler_is_none":handler is None,"has_init_error":_init_error is not None},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"A","location":"api/index.py:230","message":"Handler export complete","data":{"handler_type":type(handler).__name__,"handler_is_none":handler is None,"has_init_error":_init_error is not None,"handler_has_wsgi":hasattr(handler, '__call__')},"timestamp":int(__import__('time').time()*1000)}) + '\n')
 except: pass
-print(f"DEBUG: Handler export complete - type: {type(handler).__name__}")
+print(f"DEBUG: Handler export complete - type: {type(handler).__name__}, is_callable: {hasattr(handler, '__call__')}")
 # #endregion
 
 # DO NOT use assert in production - it can cause crashes
