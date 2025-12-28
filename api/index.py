@@ -119,11 +119,14 @@ print("DEBUG: About to import app module")
 # Try to import the app
 try:
     from app import app
+    # Verify app is a Flask instance
+    if not isinstance(app, Flask):
+        raise TypeError(f"Expected Flask instance, got {type(app)}")
     _handler = app
     # #region agent log
     try:
         with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"A","location":"api/index.py:50","message":"App imported successfully","data":{"app_type":type(app).__name__},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"A","location":"api/index.py:50","message":"App imported successfully","data":{"app_type":type(app).__name__,"is_flask":isinstance(app, Flask)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
     except: pass
     print("DEBUG: App imported successfully")
     # #endregion
