@@ -9,12 +9,12 @@ from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import traceback
+import os
 
 from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
 from forms import SignupForm, LoginForm, VerificationForm
 from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
-
-import os
 
 # App setup
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -648,20 +648,22 @@ def not_found(error):
     return render_template('index.html'), 404
 
 
-# error handling
-
-import traceback
-# from flask import jsonify, request
-
+# error handling - Generic exception handler (must be last)
+# Note: This catches all unhandled exceptions, but 404/500 handlers above take precedence
 @app.errorhandler(Exception)
 def handle_exception(e):
-    return jsonify({
-        "error": "Unhandled exception",
-        "type": type(e).__name__,
-        "message": str(e),
-        "path": request.path,
-        "traceback": traceback.format_exc()
-    }), 500
+    # Only return JSON for API-like requests or if it's a JSON request
+    if request.path.startswith('/api/') or request.is_json or request.accept_mimetypes.best == 'application/json':
+        return jsonify({
+            "error": "Unhandled exception",
+            "type": type(e).__name__,
+            "message": str(e),
+            "path": request.path,
+            "traceback": traceback.format_exc()
+        }), 500
+    # For HTML requests, flash error and redirect
+    flash(f"An error occurred: {str(e)}", "danger")
+    return redirect(url_for("index"))
 
 # =============================================================================
 # Run App

@@ -71,12 +71,21 @@
     
     
 import traceback
+import sys
+import os
 from flask import Flask, jsonify
+
+# Add parent directory to path for imports
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 try:
     # IMPORTANT: this must match your main Flask file name
     from app import app   # change to "from main import app" if your file is main.py
-
+    # Vercel requires the handler to be exported
+    handler = app
+    
 except Exception as e:
     error_app = Flask(__name__)
 
@@ -91,4 +100,4 @@ except Exception as e:
             "path": path
         }), 500
 
-    app = error_app  # THIS LINE IS CRITICAL
+    handler = error_app  # THIS LINE IS CRITICAL - Vercel needs 'handler'
