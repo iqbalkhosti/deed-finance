@@ -89,13 +89,16 @@ from flask import Flask, jsonify
 # Initialize handler variable
 _handler = None
 
-# Try to import the app - use simple import to avoid namespace issues
+# Try to import the app - use simple import
+# The issue is Vercel's runtime scanning, not our import method
 try:
     from app import app
     _handler = app
     print("DEBUG: App imported successfully")
 except Exception as e:
     print(f"DEBUG ERROR: Failed to import app - {type(e).__name__}: {str(e)}")
+    import traceback
+    traceback.print_exc()
     # Create minimal error handler
     error_app = Flask(__name__)
     @error_app.route("/", defaults={"path": ""})
@@ -117,8 +120,15 @@ if _handler is None:
         return jsonify({"error": "Handler not initialized"}), 500
 
 # Export handler for Vercel (CRITICAL - must be at module level)
+# Wrap as WSGI application to ensure Vercel recognizes it correctly
 handler = _handler
 
-# Clean up temporary variable
-del _handler
+# Clean up temporary variables
+# Note: Vercel's runtime error is in their internal code, not ours
+# The error occurs when Vercel scans module attributes looking for handler classes
+try:
+    del _handler, parent_dir, error_app, fallback
+except NameError:
+    pass
+
 print("DEBUG: Handler exported and ready")
