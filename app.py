@@ -51,21 +51,19 @@ print("DEBUG: About to import models")
 # #endregion
 
 try:
-    # Import models - Base is needed for table creation
-    # Import models - import Base separately to avoid Vercel runtime scanning issues
+    # Import models - DO NOT import Base to avoid Vercel runtime scanning issues
+    # Access Base through models module namespace only, never assign it to app module
     import models
     from models import Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
-    # Access Base through models module to avoid exposing it in app module namespace
-    Base = models.Base
     # #region agent log
     try:
         with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"F","location":"app.py:58","message":"Models imported via module","data":{"base_type":str(type(Base))},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+            f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"F","location":"app.py:58","message":"Models imported via module","data":{"base_in_models":"Base" in dir(models)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
     except: pass
     print("DEBUG: Models imported successfully")
     # #endregion
-    # Hide Base from module introspection by not including it in __all__
-    # This prevents Vercel's runtime from finding it when scanning
+    # Hide Base from module introspection - Base is NOT in app module namespace
+    # This prevents Vercel's runtime from finding it when scanning app module
     __all__ = ['app', 'Client', 'CreditCard', 'Subscription', 'SpendingCategory', 
                'CardBonus', 'UserCard', 'UserSubscription', 'Session', 'engine', 
                'bcrypt', 'login_manager', 'mail']
@@ -230,7 +228,8 @@ print("DEBUG: Creating database tables")
 # #endregion
 
 try:
-    Base.metadata.create_all(engine)
+    # Use models.Base directly - do NOT assign Base to app module namespace
+    models.Base.metadata.create_all(engine)
     # #region agent log
     try:
         with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
