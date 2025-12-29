@@ -22,10 +22,12 @@ except: pass
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
+    import sqlalchemy
+    sa_version = getattr(sqlalchemy, '__version__', 'unknown')
     # #region agent log
     try:
         with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"C","location":"app.py:18","message":"SQLAlchemy imported successfully","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+            f.write(json.dumps({"sessionId":"debug-session","runId":"sqlalchemy-downgrade","hypothesisId":"D","location":"app.py:20","message":"SQLAlchemy imported successfully","data":{"version":sa_version},"timestamp":int(__import__('time').time()*1000)}) + '\n')
     except: pass
     # #endregion
 except Exception as e:
@@ -34,7 +36,7 @@ except Exception as e:
         import traceback as tb
         tb_str = ''.join(tb.format_exception(type(e), e, e.__traceback__))
         with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"C","location":"app.py:24","message":"SQLAlchemy import failed","data":{"error_type":type(e).__name__,"error_msg":str(e),"traceback":tb_str[:500]},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+            f.write(json.dumps({"sessionId":"debug-session","runId":"sqlalchemy-downgrade","hypothesisId":"D","location":"app.py:28","message":"SQLAlchemy import failed","data":{"error_type":type(e).__name__,"error_msg":str(e),"traceback":tb_str[:500]},"timestamp":int(__import__('time').time()*1000)}) + '\n')
     except: pass
     # #endregion
     raise
