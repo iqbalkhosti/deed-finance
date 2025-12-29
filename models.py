@@ -8,7 +8,13 @@ from sqlalchemy.ext.declarative import declarative_base
 from flask_login import UserMixin
 from datetime import datetime
 
-Base = declarative_base()
+# Create Base - use _Base internally to avoid Vercel runtime scanning issues
+_Base = declarative_base()
+# Export as Base for compatibility, but mark it as private for Vercel
+Base = _Base
+# Hide Base from module introspection by not including it in __all__
+__all__ = ['Client', 'CreditCard', 'Subscription', 'SpendingCategory', 
+           'CardBonus', 'UserCard', 'UserSubscription']
 
 
 class Client(Base, UserMixin):

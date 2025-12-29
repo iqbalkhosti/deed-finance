@@ -166,12 +166,35 @@ if _handler is None:
 # Wrap as WSGI application to ensure Vercel recognizes it correctly
 handler = _handler
 
-# Clean up temporary variables
-# Note: Vercel's runtime error is in their internal code, not ours
-# The error occurs when Vercel scans module attributes looking for handler classes
+# #region agent log
+# Log what's in the module namespace before cleanup
 try:
-    del _handler, parent_dir, error_app, fallback
-except NameError:
-    pass
+    module_attrs = [k for k in globals().keys() if not k.startswith('_') and k != 'handler']
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"vercel-scan-test","hypothesisId":"E","location":"api/index.py:170","message":"Module namespace before cleanup","data":{"attrs":module_attrs[:20],"handler_type":str(type(_handler))},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+# #endregion
+
+# Clean up ALL temporary variables and imports
+# Vercel's runtime scans module attributes - we need to ensure ONLY 'handler' is visible
+# The error suggests Vercel is finding 'Base' (from SQLAlchemy) and trying issubclass() on it
+_vars_to_delete = ['_handler', 'parent_dir', 'error_app', 'fallback', 'error_handler', 
+                   'json', 'sys', 'os', 'Flask', 'jsonify', 'typing_extensions', 'te_version', 'te_path']
+for var in _vars_to_delete:
+    try:
+        if var in globals():
+            del globals()[var]
+    except (NameError, KeyError):
+        pass
+del _vars_to_delete
+
+# #region agent log
+# Log what's left after cleanup
+try:
+    final_attrs = [k for k in globals().keys() if not k.startswith('_')]
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"vercel-scan-test","hypothesisId":"E","location":"api/index.py:190","message":"Module namespace after cleanup","data":{"attrs":final_attrs[:20],"has_handler":"handler" in globals()},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+# #endregion
 
 print("DEBUG: Handler exported and ready")
