@@ -77,11 +77,33 @@ MINIMAL VERSION to avoid namespace conflicts with Vercel's runtime introspection
 """
 import sys
 import os
+import json
+
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"A","location":"api/index.py:15","message":"Handler init started","data":{"python_version":sys.version,"sys_path_len":len(sys.path)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+# #endregion
 
 # Add parent directory to path
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
+
+# #region agent log
+try:
+    import typing_extensions
+    te_version = getattr(typing_extensions, '__version__', 'unknown')
+    te_path = getattr(typing_extensions, '__file__', 'unknown')
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"A","location":"api/index.py:25","message":"typing-extensions check","data":{"version":te_version,"path":te_path,"is_vendor":'_vendor' in str(te_path)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except Exception as e:
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"A","location":"api/index.py:30","message":"typing-extensions import failed","data":{"error":str(e)},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+# #endregion
 
 # Import Flask for error handler
 from flask import Flask, jsonify
@@ -89,13 +111,34 @@ from flask import Flask, jsonify
 # Initialize handler variable
 _handler = None
 
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"B","location":"api/index.py:40","message":"About to import app","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+# #endregion
+
 # Try to import the app - use simple import
 # The issue is Vercel's runtime scanning, not our import method
 try:
     from app import app
     _handler = app
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"B","location":"api/index.py:48","message":"App imported successfully","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
     print("DEBUG: App imported successfully")
 except Exception as e:
+    # #region agent log
+    try:
+        import traceback as tb
+        tb_str = ''.join(tb.format_exception(type(e), e, e.__traceback__))
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"B","location":"api/index.py:55","message":"App import failed","data":{"error_type":type(e).__name__,"error_msg":str(e),"traceback":tb_str[:500]},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
     print(f"DEBUG ERROR: Failed to import app - {type(e).__name__}: {str(e)}")
     import traceback
     traceback.print_exc()

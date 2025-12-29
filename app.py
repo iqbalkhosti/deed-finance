@@ -7,10 +7,37 @@ from datetime import datetime
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify, session as flask_session
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import traceback
 import os
+import sys
+import json
+
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"C","location":"app.py:12","message":"About to import SQLAlchemy","data":{"python_version":sys.version},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+# #endregion
+
+try:
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    # #region agent log
+    try:
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"C","location":"app.py:18","message":"SQLAlchemy imported successfully","data":{},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
+except Exception as e:
+    # #region agent log
+    try:
+        import traceback as tb
+        tb_str = ''.join(tb.format_exception(type(e), e, e.__traceback__))
+        with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({"sessionId":"debug-session","runId":"typing-extensions-test","hypothesisId":"C","location":"app.py:24","message":"SQLAlchemy import failed","data":{"error_type":type(e).__name__,"error_msg":str(e),"traceback":tb_str[:500]},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+    except: pass
+    # #endregion
+    raise
 
 # #region agent log
 import json
