@@ -10,17 +10,17 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
-from forms import SignupForm, LoginForm, VerificationForm
+from forms import SignupForm, LoginForm, VerificationForm, EditProfileForm, ChangePasswordForm
 from email_utils import generate_verification_code, get_code_expiry, send_verification_email
-
+from config import Config
 import os
 
 # App setup
 app = Flask(__name__, template_folder="templates")
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
+app.config.from_object(Config)
 
 # Database setup
-engine = create_engine("sqlite:///clients.db", echo=False)
+engine = create_engine(app.config["DB_URI"], echo=False)
 Session = sessionmaker(bind=engine)
 
 # Extensions
@@ -226,6 +226,49 @@ def logout():
     flash("You have been logged out.", "info")
     return redirect(url_for("index"))
 
+
+@app.route("/profile", methods=["GET", "POST"])
+@login_required
+def profile():
+    """User profile settings."""
+    form = EditProfileForm()
+    
+    if request.method == 'GET':
+        form.first_name.data = current_user.first_name
+        form.surname.data = current_user.surname
+        
+    if form.validate_on_submit():
+        with Session() as session:
+            client = session.get(Client, current_user.id)
+            if client:
+                client.first_name = form.first_name.data
+                client.surname = form.surname.data
+                session.commit()
+                flash("Profile updated successfully!", "success")
+                return redirect(url_for("profile"))
+    
+    return render_template("profile.html", form=form)
+
+
+@app.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Change user password."""
+    form = ChangePasswordForm()
+    
+    if form.validate_on_submit():
+        with Session() as session:
+            client = session.get(Client, current_user.id)
+            if client and bcrypt.check_password_hash(client.password, form.current_password.data):
+                hashed_password = bcrypt.generate_password_hash(form.new_password.data).decode('utf-8')
+                client.password = hashed_password
+                session.commit()
+                flash("Password changed successfully!", "success")
+                return redirect(url_for("profile"))
+            else:
+                flash("Incorrect current password.", "danger")
+    
+    return render_template("change_password.html", form=form)
 
 # =============================================================================
 # Dashboard Routes (Protected)
@@ -558,6 +601,20 @@ def calculate_points():
             "total_points": total_points,
             "coverage": coverage
         })
+
+
+# =============================================================================
+# Error Handlers
+# =============================================================================
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
 
 
 # =============================================================================

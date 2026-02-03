@@ -51,3 +51,31 @@ class VerificationForm(FlaskForm):
         validators=[DataRequired(), Length(min=6, max=6, message="Please enter the 6-digit code.")]
     )
     submit = SubmitField("Verify Email")
+
+
+class EditProfileForm(FlaskForm):
+    first_name = StringField(
+        "First Name",
+        validators=[DataRequired(), Length(min=2, max=100)]
+    )
+    surname = StringField(
+        "Last Name",
+        validators=[DataRequired(), Length(min=2, max=100)]
+    )
+    submit = SubmitField("Update Profile")
+
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField(
+        "Current Password",
+        validators=[DataRequired()]
+    )
+    new_password = PasswordField(
+        "New Password",
+        validators=[DataRequired(), Length(min=8, max=256, message="Password must be at least 8 characters.")]
+    )
+    confirm_new = PasswordField(
+        "Confirm New Password",
+        validators=[DataRequired(), EqualTo("new_password", message="Passwords must match.")]
+    )
+    submit = SubmitField("Change Password")

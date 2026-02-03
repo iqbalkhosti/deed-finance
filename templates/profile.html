@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4 animate-fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="h2 fw-bold mb-4">Account Settings</h1>
+
+            <!-- Profile Info Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('profile') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">First Name</label>
+                                {{ form.first_name(class="form-control", placeholder="Enter first name") }}
+                                {% for error in form.first_name.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Name</label>
+                                {{ form.surname(class="form-control", placeholder="Enter last name") }}
+                                {% for error in form.surname.errors %}
+                                <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control bg-light" value="{{ current_user.email }}" disabled
+                                readonly>
+                            <div class="form-text">Email cannot be changed directly. Contact support if needed.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="mb-0"><i class="bi bi-shield-lock me-2 text-danger"></i>Security</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Manage your password and security settings.</p>
+
+                    <a href="{{ url_for('change_password') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-key me-2"></i>Change Password
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('dashboard') }}" class="text-decoration-none text-muted">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
