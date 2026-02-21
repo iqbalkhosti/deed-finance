@@ -2,26 +2,56 @@
 Deed Finance - Subscription Points Planner
 A web app that helps users understand how to use credit card points to cover subscriptions.
 """
+
 from datetime import datetime
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify, session as flask_session
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
+import traceback
+import os
 
 from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
 from forms import SignupForm, LoginForm, VerificationForm, EditProfileForm, ChangePasswordForm
-from email_utils import generate_verification_code, get_code_expiry, send_verification_email
-from config import Config
-import os
+from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
 
 # App setup
-app = Flask(__name__, template_folder="templates")
-app.config.from_object(Config)
+app = Flask(__name__, template_folder="templates", static_folder="static")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-key")
 
-# Database setup
-engine = create_engine(app.config["DB_URI"], echo=False)
+# Email configuration
+app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@deed.com")
+
+# Initialize Flask-Mail
+try:
+    mail.init_app(app)
+except Exception as e:
+    print(f"Warning: Could not initialize Flask-Mail: {e}")
+
+# Database setup - handle Vercel serverless environment
+is_vercel = os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
+if is_vercel:
+    db_path = "/tmp/clients.db"
+    os.makedirs("/tmp", exist_ok=True)
+else:
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clients.db")
+
+database_url = os.environ.get("DATABASE_URL", f"sqlite:///{db_path}")
+engine = create_engine(database_url, echo=False, connect_args={"check_same_thread": False})
 Session = sessionmaker(bind=engine)
+
+# Initialize database tables
+try:
+    Base.metadata.create_all(engine)
+    print(f"Database initialized at: {db_path}")
+except Exception as e:
+    print(f"Warning: Could not initialize database tables: {e}")
 
 # Extensions
 bcrypt = Bcrypt(app)
@@ -35,7 +65,10 @@ login_manager.login_message_category = "info"
 def load_user(user_id):
     """Load user by ID for Flask-Login."""
     with Session() as session:
-        return session.get(Client, int(user_id))
+        user = session.get(Client, int(user_id))
+        if user:
+            session.expunge(user)
+        return user
 
 
 # =============================================================================
@@ -46,6 +79,25 @@ def load_user(user_id):
 def index():
     """Landing page."""
     return render_template("index.html")
+
+
+@app.route("/health")
+def health():
+    """Health check endpoint for debugging."""
+    try:
+        with Session() as session:
+            from sqlalchemy import text
+            session.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+    
+    return jsonify({
+        "status": "ok",
+        "database": db_path,
+        "vercel": bool(is_vercel),
+        "db_status": db_status
+    }), 200
 
 
 @app.route("/signup", methods=["GET", "POST"])
@@ -110,7 +162,6 @@ def login():
             if client and bcrypt.check_password_hash(client.password, form.password.data):
                 # Check if email is verified
                 if not client.is_verified:
-                    # Store user ID for verification page
                     flask_session['pending_verification_user_id'] = client.id
                     flash("Please verify your email before logging in.", "warning")
                     return redirect(url_for("verify_email"))
@@ -155,21 +206,16 @@ def verify_email():
         email = user.email
         
         if form.validate_on_submit():
-            # Check if code matches and hasn't expired
             if user.verification_code == form.code.data:
                 if user.code_expires_at and datetime.utcnow() > user.code_expires_at:
                     flash("Verification code has expired. Please request a new one.", "warning")
                 else:
-                    # Mark as verified
                     user.is_verified = True
                     user.verification_code = None
                     user.code_expires_at = None
                     session.commit()
                     
-                    # Clear pending verification
                     flask_session.pop('pending_verification_user_id', None)
-                    
-                    # Store user_id to log in after session closes
                     verified_user_id = user.id
                     
                     # Log in user in a new session
@@ -204,13 +250,11 @@ def resend_verification():
             flash("Email already verified.", "info")
             return redirect(url_for("login"))
         
-        # Generate new code
         new_code = generate_verification_code()
         user.verification_code = new_code
         user.code_expires_at = get_code_expiry()
         session.commit()
         
-        # Send email
         send_verification_email(user.email, new_code, user.first_name)
         
         flash("A new verification code has been sent to your email.", "success")
@@ -281,35 +325,41 @@ def dashboard():
     user_id = current_user.id
     
     with Session() as session:
-        # Get user's cards with points
-        user_cards = session.query(UserCard).filter_by(client_id=user_id).all()
+        # Eagerly load relationships to avoid DetachedInstanceError in templates
+        user_cards = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(client_id=user_id).all()
         
-        # Get user's active subscriptions
-        user_subs = session.query(UserSubscription).filter_by(
-            client_id=user_id,
-            is_active=True
-        ).all()
+        user_subs = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(client_id=user_id, is_active=True).all()
         
         # Calculate totals
         total_points = sum(uc.current_points for uc in user_cards)
         total_monthly_cost = sum(us.subscription.monthly_cost_cad for us in user_subs)
         
         # Calculate points needed (rough estimate: $1 = 100 points for most cards)
-        points_per_dollar = 100  # Average conversion
+        points_per_dollar = 100
         points_needed = int(total_monthly_cost * points_per_dollar)
         
         # Calculate coverage percentage
         coverage_percent = min(100, int((total_points / max(points_needed, 1)) * 100))
         
-        return render_template(
-            "dashboard.html",
-            user_cards=user_cards,
-            user_subs=user_subs,
-            total_points=total_points,
-            total_monthly_cost=total_monthly_cost,
-            points_needed=points_needed,
-            coverage_percent=coverage_percent
-        )
+        # Detach all objects so they can be used in templates after session closes
+        for uc in user_cards:
+            session.expunge(uc)
+        for us in user_subs:
+            session.expunge(us)
+        
+    return render_template(
+        "dashboard.html",
+        user_cards=user_cards,
+        user_subs=user_subs,
+        total_points=total_points,
+        total_monthly_cost=total_monthly_cost,
+        points_needed=points_needed,
+        coverage_percent=coverage_percent
+    )
 
 
 @app.route("/my-cards")
@@ -319,19 +369,26 @@ def my_cards():
     user_id = current_user.id
     
     with Session() as session:
-        # Get all available credit cards
+        # Eagerly load credit_card relationship
         all_cards = session.query(CreditCard).filter_by(is_active=True).all()
         
-        # Get user's cards
-        user_cards = session.query(UserCard).filter_by(client_id=user_id).all()
+        user_cards = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(client_id=user_id).all()
         user_card_ids = [uc.credit_card_id for uc in user_cards]
         
-        return render_template(
-            "my_cards.html",
-            all_cards=all_cards,
-            user_cards=user_cards,
-            user_card_ids=user_card_ids
-        )
+        # Detach all objects for use in templates
+        for card in all_cards:
+            session.expunge(card)
+        for uc in user_cards:
+            session.expunge(uc)
+        
+    return render_template(
+        "my_cards.html",
+        all_cards=all_cards,
+        user_cards=user_cards,
+        user_card_ids=user_card_ids
+    )
 
 
 @app.route("/add-card/<int:card_id>", methods=["POST"])
@@ -341,7 +398,6 @@ def add_card(card_id):
     user_id = current_user.id
     
     with Session() as session:
-        # Check if already added
         existing = session.query(UserCard).filter_by(
             client_id=user_id,
             credit_card_id=card_id
@@ -351,7 +407,6 @@ def add_card(card_id):
             flash("You already have this card!", "warning")
             return redirect(url_for("my_cards"))
         
-        # Add the card
         new_user_card = UserCard(
             client_id=user_id,
             credit_card_id=card_id,
@@ -360,12 +415,11 @@ def add_card(card_id):
         session.add(new_user_card)
         session.commit()
         
-        # Get card name for flash message
         card = session.get(CreditCard, card_id)
         if card:
             flash(f"Added {card.name} to your wallet!", "success")
         else:
-             flash("Card added to wallet!", "success")
+            flash("Card added to wallet!", "success")
     
     return redirect(url_for("my_cards"))
 
@@ -377,7 +431,9 @@ def remove_card(user_card_id):
     user_id = current_user.id
     
     with Session() as session:
-        user_card = session.query(UserCard).filter_by(
+        user_card = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(
             id=user_card_id,
             client_id=user_id
         ).first()
@@ -423,19 +479,25 @@ def my_subscriptions():
     user_id = current_user.id
     
     with Session() as session:
-        # Get all available subscriptions
         all_subs = session.query(Subscription).filter_by(is_active=True).all()
         
-        # Get user's subscriptions
-        user_subs = session.query(UserSubscription).filter_by(client_id=user_id).all()
+        user_subs = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(client_id=user_id).all()
         user_sub_ids = [us.subscription_id for us in user_subs]
         
-        return render_template(
-            "my_subscriptions.html",
-            all_subs=all_subs,
-            user_subs=user_subs,
-            user_sub_ids=user_sub_ids
-        )
+        # Detach all objects for use in templates
+        for sub in all_subs:
+            session.expunge(sub)
+        for us in user_subs:
+            session.expunge(us)
+        
+    return render_template(
+        "my_subscriptions.html",
+        all_subs=all_subs,
+        user_subs=user_subs,
+        user_sub_ids=user_sub_ids
+    )
 
 
 @app.route("/add-subscription/<int:sub_id>", methods=["POST"])
@@ -474,7 +536,9 @@ def remove_subscription(user_sub_id):
     user_id = current_user.id
     
     with Session() as session:
-        user_sub = session.query(UserSubscription).filter_by(
+        user_sub = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(
             id=user_sub_id,
             client_id=user_id
         ).first()
@@ -497,24 +561,30 @@ def advisor():
     user_id = current_user.id
     
     with Session() as session:
-        # Get user's cards
-        user_cards = session.query(UserCard).filter_by(client_id=user_id).all()
+        user_cards = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(client_id=user_id).all()
         
-        # Get spending categories
         categories = session.query(SpendingCategory).all()
         
-        # Get user's subscriptions
-        user_subs = session.query(UserSubscription).filter_by(
-            client_id=user_id,
-            is_active=True
-        ).all()
+        user_subs = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(client_id=user_id, is_active=True).all()
         
-        return render_template(
-            "advisor.html",
-            user_cards=user_cards,
-            categories=categories,
-            user_subs=user_subs
-        )
+        # Detach all objects for use in templates
+        for uc in user_cards:
+            session.expunge(uc)
+        for cat in categories:
+            session.expunge(cat)
+        for us in user_subs:
+            session.expunge(us)
+        
+    return render_template(
+        "advisor.html",
+        user_cards=user_cards,
+        categories=categories,
+        user_subs=user_subs
+    )
 
 
 @app.route("/calculate-points", methods=["POST"])
@@ -523,15 +593,16 @@ def calculate_points():
     """Calculate points earned based on spending inputs."""
     data = request.get_json()
     
-    # Check if data is None
     if not data:
         return jsonify({"error": "Invalid JSON"}), 400
         
-    spending = data.get("spending", {})  # {category_id: amount}
+    spending = data.get("spending", {})
     user_id = current_user.id
     
     with Session() as session:
-        user_cards = session.query(UserCard).filter_by(client_id=user_id).all()
+        user_cards = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(client_id=user_id).all()
         
         results = []
         total_points = 0
@@ -551,7 +622,6 @@ def calculate_points():
             for user_card in user_cards:
                 card = user_card.credit_card
                 
-                # Check for bonus rate in this category
                 bonus = session.query(CardBonus).filter_by(
                     credit_card_id=card.id,
                     category_id=int(category_id)
@@ -576,16 +646,15 @@ def calculate_points():
                 total_points += best_points
         
         # Get subscriptions user can cover
-        user_subs = session.query(UserSubscription).filter_by(
-            client_id=user_id,
-            is_active=True
-        ).all()
+        user_subs = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(client_id=user_id, is_active=True).all()
         
         coverage = []
         points_remaining = total_points
         for us in user_subs:
             sub = us.subscription
-            points_needed = int(sub.monthly_cost_cad * 100)  # rough estimate
+            points_needed = int(sub.monthly_cost_cad * 100)
             can_cover = points_remaining >= points_needed
             coverage.append({
                 "name": sub.name,
@@ -609,12 +678,27 @@ def calculate_points():
 
 @app.errorhandler(404)
 def page_not_found(e):
+    """Handle 404 errors."""
     return render_template('404.html'), 404
 
 
 @app.errorhandler(500)
 def internal_server_error(e):
+    """Handle 500 errors."""
     return render_template('500.html'), 500
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Handle all unhandled exceptions."""
+    if request.path.startswith('/api/') or request.is_json:
+        return jsonify({
+            "error": "Unhandled exception",
+            "type": type(e).__name__,
+            "message": str(e),
+        }), 500
+    flash(f"An error occurred: {str(e)}", "danger")
+    return redirect(url_for("index"))
 
 
 # =============================================================================

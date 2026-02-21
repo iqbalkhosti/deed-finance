@@ -8,7 +8,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from flask_login import UserMixin
 from datetime import datetime
 
+# Create Base - Vercel's runtime will scan this module and find Base
+# This is a known Vercel Python runtime bug that prevents deployment
+# See VERCEL_ISSUE_SUMMARY.md for details and alternative platforms
 Base = declarative_base()
+
+# Hide Base from __all__ but it's still in module __dict__ (Vercel scans __dict__)
+__all__ = ['Client', 'CreditCard', 'Subscription', 'SpendingCategory', 
+           'CardBonus', 'UserCard', 'UserSubscription']
 
 
 class Client(Base, UserMixin):

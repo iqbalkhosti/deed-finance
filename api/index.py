@@ -1,14 +1,16 @@
 """
 Vercel serverless function entry point.
-This file exposes the Flask app for Vercel's Python runtime.
+Exposes the Flask app as a handler for Vercel's Python runtime.
 """
 import sys
 import os
 
-# Add the parent directory to the path so we can import app
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add the project root to the path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
 
 from app import app
 
-# Vercel expects the app to be named 'app' or 'handler'
-# The @vercel/python runtime will automatically use this
+# Vercel expects 'handler' or 'app' to be exported
+handler = app
