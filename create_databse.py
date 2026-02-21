@@ -3,12 +3,12 @@
 # from sqlalchemy.orm import sessionmaker
 
 # engine = create_engine("sqlite:///clients.db", echo=True)
-# Base= declarative_base()
+# DbBase= declarative_base()
 # Session = sessionmaker(bind=engine)
 
 # session = Session()
 
-# class Client(Base):
+# class Client(DbBase):
 
 #     __tablename__= "client"
 
@@ -21,7 +21,7 @@
 
 
 
-# Base.metadata.create_all(engine)
+# DbBase.metadata.create_all(engine)
 
 
 

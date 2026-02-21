@@ -12,12 +12,17 @@ from sqlalchemy.orm import sessionmaker, joinedload
 import traceback
 import os
 
-from models import Base, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
+from models import DbBase, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
 from forms import SignupForm, LoginForm, VerificationForm, EditProfileForm, ChangePasswordForm
 from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
 
-# App setup
-app = Flask(__name__, template_folder="templates", static_folder="static")
+# App setup — use absolute paths so templates/static resolve on Vercel
+_base_dir = os.path.dirname(os.path.abspath(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(_base_dir, "templates"),
+    static_folder=os.path.join(_base_dir, "static")
+)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-key")
 
 # Email configuration
@@ -48,7 +53,7 @@ Session = sessionmaker(bind=engine)
 
 # Initialize database tables
 try:
-    Base.metadata.create_all(engine)
+    DbBase.metadata.create_all(engine)
     print(f"Database initialized at: {db_path}")
 except Exception as e:
     print(f"Warning: Could not initialize database tables: {e}")

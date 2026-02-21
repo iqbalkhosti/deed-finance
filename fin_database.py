@@ -3,12 +3,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 engine = create_engine("sqlite:///clients.db", echo=True)
-Base= declarative_base()
+DbBase= declarative_base()
 Session = sessionmaker(bind=engine)
 
 session = Session()
 
-class Client(Base):
+class Client(DbBase):
     __tablename__ = "Client"
     id         = Column(Integer, primary_key=True)
     first_name = Column(String(100))
@@ -17,7 +17,7 @@ class Client(Base):
     # bank       = Column(String(100), unique=True)
     password   = Column(String(200))
 
-Base.metadata.create_all(engine)
+DbBase.metadata.create_all(engine)
 
 
 # the following line is for inserting any sql query to the database.

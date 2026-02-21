@@ -11,14 +11,14 @@ from datetime import datetime
 # Create Base - Vercel's runtime will scan this module and find Base
 # This is a known Vercel Python runtime bug that prevents deployment
 # See VERCEL_ISSUE_SUMMARY.md for details and alternative platforms
-Base = declarative_base()
+DbBase = declarative_base()
 
 # Hide Base from __all__ but it's still in module __dict__ (Vercel scans __dict__)
 __all__ = ['Client', 'CreditCard', 'Subscription', 'SpendingCategory', 
            'CardBonus', 'UserCard', 'UserSubscription']
 
 
-class Client(Base, UserMixin):
+class Client(DbBase, UserMixin):
     """User account model - extends existing Client with Flask-Login support."""
     __tablename__ = "Client"
     
@@ -39,7 +39,7 @@ class Client(Base, UserMixin):
     user_subscriptions = relationship("UserSubscription", back_populates="client", cascade="all, delete-orphan")
 
 
-class CreditCard(Base):
+class CreditCard(DbBase):
     """
     Canadian credit cards with rewards information.
     Pre-populated with RBC, BMO, TD, CIBC, Scotiabank cards.
@@ -61,7 +61,7 @@ class CreditCard(Base):
     user_cards = relationship("UserCard", back_populates="credit_card")
 
 
-class SpendingCategory(Base):
+class SpendingCategory(DbBase):
     """Spending categories like groceries, gas, dining, travel, etc."""
     __tablename__ = "spending_category"
     
@@ -74,7 +74,7 @@ class SpendingCategory(Base):
     card_bonuses = relationship("CardBonus", back_populates="category")
 
 
-class CardBonus(Base):
+class CardBonus(DbBase):
     """Bonus points for specific categories on specific cards."""
     __tablename__ = "card_bonus"
     
@@ -88,7 +88,7 @@ class CardBonus(Base):
     category = relationship("SpendingCategory", back_populates="card_bonuses")
 
 
-class Subscription(Base):
+class Subscription(DbBase):
     """
     Subscription services like Netflix, Spotify, Twitter Blue, LinkedIn Premium.
     Pre-populated with common services and CAD pricing.
@@ -108,7 +108,7 @@ class Subscription(Base):
     user_subscriptions = relationship("UserSubscription", back_populates="subscription")
 
 
-class UserCard(Base):
+class UserCard(DbBase):
     """User's credit cards with their current points balance."""
     __tablename__ = "user_card"
     
@@ -123,7 +123,7 @@ class UserCard(Base):
     credit_card = relationship("CreditCard", back_populates="user_cards")
 
 
-class UserSubscription(Base):
+class UserSubscription(DbBase):
     """User's subscriptions they want to track/cover with points."""
     __tablename__ = "user_subscription"
     

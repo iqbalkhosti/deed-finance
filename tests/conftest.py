@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app import app, engine, Session
-from models import Base, Client
+from models import DbBase, Client
 from config import Config
 
 class TestConfig(Config):
@@ -30,7 +30,7 @@ def client():
     # Create tables
     from sqlalchemy import create_engine
     test_engine = create_engine(app.config['DB_URI'])
-    Base.metadata.create_all(test_engine)
+    DbBase.metadata.create_all(test_engine)
     
     # Patch the session to use our test engine
     # In a real app we'd use dependency injection, but here we can try to patch or just use the file
@@ -41,7 +41,7 @@ def client():
             yield client
     
     # Cleanup
-    Base.metadata.drop_all(test_engine)
+    DbBase.metadata.drop_all(test_engine)
     if os.path.exists("test_clients.db"):
         os.remove("test_clients.db")
 

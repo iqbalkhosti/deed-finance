@@ -4,7 +4,7 @@ Run this script to populate the database with Canadian credit cards and common s
 """
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base, CreditCard, SpendingCategory, CardBonus, Subscription
+from models import DbBase, CreditCard, SpendingCategory, CardBonus, Subscription
 
 # Database setup
 engine = create_engine("sqlite:///clients.db", echo=False)
@@ -13,7 +13,7 @@ Session = sessionmaker(bind=engine)
 
 def create_tables():
     """Create all tables if they don't exist."""
-    Base.metadata.create_all(engine)
+    DbBase.metadata.create_all(engine)
     print("✅ Tables created successfully!")
 
 
