@@ -40,6 +40,18 @@ except Exception as e:
     print(f"Warning: Could not initialize Flask-Mail: {e}")
 
 # Database setup - handle Vercel serverless environment
+# On Vercel, we need to use /tmp for writable files
+# Note: SQLite on Vercel is not ideal for production - consider using Vercel Postgres or another cloud database
+# Check for Vercel environment (VERCEL or VERCEL_ENV are set by Vercel)
+# Also check if we're in a serverless environment by checking if /tmp exists and is writable
+# #region agent log
+try:
+    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
+        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:80","message":"Starting database setup","data":{"vercel_env":os.environ.get("VERCEL"),"vercel_env_var":os.environ.get("VERCEL_ENV"),"tmp_exists":os.path.exists("/tmp")},"timestamp":int(__import__('time').time()*1000)}) + '\n')
+except: pass
+print("DEBUG: Starting database setup")
+# #endregion
+
 is_vercel = os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
 if is_vercel:
     db_path = "/tmp/clients.db"
