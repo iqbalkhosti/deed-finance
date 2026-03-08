@@ -791,12 +791,16 @@ def internal_server_error(e):
 @app.errorhandler(Exception)
 def handle_exception(e):
     """Handle all unhandled exceptions."""
-    if request.path.startswith('/api/') or request.is_json:
-        return jsonify({
-            "error": "Unhandled exception",
-            "type": type(e).__name__,
-            "message": str(e),
-        }), 500
+    import traceback
+    err_payload = {
+        "error": "Unhandled exception",
+        "type": type(e).__name__,
+        "message": str(e),
+        "traceback": traceback.format_exc(),
+    }
+    # On Vercel, always return JSON so we can see the actual error
+    if os.environ.get("VERCEL") == "1" or request.path.startswith("/api/") or request.is_json:
+        return jsonify(err_payload), 500
     flash(f"An error occurred: {str(e)}", "danger")
     return redirect(url_for("index"))
 
