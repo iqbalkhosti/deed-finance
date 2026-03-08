@@ -2,13 +2,8 @@
 Seed data for Subscription Points Planner.
 Run this script to populate the database with Canadian credit cards and common subscriptions.
 """
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from db import engine, Session
 from models import DbBase, CreditCard, SpendingCategory, CardBonus, Subscription
-
-# Database setup
-engine = create_engine("sqlite:///clients.db", echo=False)
-Session = sessionmaker(bind=engine)
 
 
 def create_tables():
@@ -32,16 +27,13 @@ def seed_spending_categories():
         {"name": "Other", "icon": "bi-three-dots", "description": "All other purchases"},
     ]
     
-    session = Session()
-    try:
+    with Session() as session:
         for cat_data in categories:
             existing = session.query(SpendingCategory).filter_by(name=cat_data["name"]).first()
             if not existing:
                 session.add(SpendingCategory(**cat_data))
         session.commit()
-        print(f"✅ Seeded {len(categories)} spending categories!")
-    finally:
-        session.close()
+        print(f"Seeded {len(categories)} spending categories!")
 
 
 def seed_credit_cards():
@@ -182,15 +174,13 @@ def seed_credit_cards():
         },
     ]
     
-    session = Session()
-    try:
+    with Session() as session:
         for card_data in cards:
             existing = session.query(CreditCard).filter_by(name=card_data["name"]).first()
             if not existing:
                 session.add(CreditCard(**card_data))
                 print(f"Added new card: {card_data['name']}")
             else:
-                # Update existing card details
                 updated = False
                 for key, value in card_data.items():
                     if getattr(existing, key) != value:
@@ -198,11 +188,9 @@ def seed_credit_cards():
                         updated = True
                 if updated:
                     print(f"Updated card: {card_data['name']}")
-                    
+
         session.commit()
-        print(f"✅ Processed {len(cards)} credit cards!")
-    finally:
-        session.close()
+        print(f"Processed {len(cards)} credit cards!")
 
 
 def seed_card_bonuses():
@@ -284,19 +272,18 @@ def seed_card_bonuses():
         ("Scotia Momentum Visa Infinite", "Transit", 2.0),
     ]
     
-    session = Session()
-    try:
+    with Session() as session:
         count = 0
         for card_name, category_name, earn_rate in bonuses:
             card = session.query(CreditCard).filter_by(name=card_name).first()
             category = session.query(SpendingCategory).filter_by(name=category_name).first()
-            
+
             if card and category:
                 existing = session.query(CardBonus).filter_by(
-                    credit_card_id=card.id, 
+                    credit_card_id=card.id,
                     category_id=category.id
                 ).first()
-                
+
                 if not existing:
                     session.add(CardBonus(
                         credit_card_id=card.id,
@@ -308,11 +295,9 @@ def seed_card_bonuses():
                     if existing.earn_rate != earn_rate:
                         existing.earn_rate = earn_rate
                         count += 1
-                        
+
         session.commit()
-        print(f"✅ Processed/Updated {len(bonuses)} card bonus categories!")
-    finally:
-        session.close()
+        print(f"Processed/Updated {len(bonuses)} card bonus categories!")
 
 
 def seed_subscriptions():
@@ -365,16 +350,13 @@ def seed_subscriptions():
          "icon": "bi-google", "color": "#4285F4", "description": "Google storage + VPN"},
     ]
     
-    session = Session()
-    try:
+    with Session() as session:
         for sub_data in subscriptions:
             existing = session.query(Subscription).filter_by(name=sub_data["name"]).first()
             if not existing:
                 session.add(Subscription(**sub_data))
         session.commit()
-        print(f"✅ Seeded {len(subscriptions)} subscriptions!")
-    finally:
-        session.close()
+        print(f"Seeded {len(subscriptions)} subscriptions!")
 
 
 def run_all_seeds():

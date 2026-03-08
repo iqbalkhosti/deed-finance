@@ -7,11 +7,12 @@ from datetime import datetime
 from flask import Flask, render_template, flash, redirect, url_for, request, jsonify, session as flask_session
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, joinedload
-import traceback
+from sqlalchemy.orm import joinedload
+import json
 import os
 
+from config import Config
+from db import engine, Session, get_database_url, is_sqlite
 from models import DbBase, Client, CreditCard, Subscription, SpendingCategory, CardBonus, UserCard, UserSubscription
 from forms import SignupForm, LoginForm, VerificationForm, EditProfileForm, ChangePasswordForm
 from email_utils import generate_verification_code, get_code_expiry, send_verification_email, mail
@@ -23,15 +24,7 @@ app = Flask(
     template_folder=os.path.join(_base_dir, "templates"),
     static_folder=os.path.join(_base_dir, "static")
 )
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-only-key")
-
-# Email configuration
-app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
-app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
-app.config["MAIL_USE_TLS"] = os.environ.get("MAIL_USE_TLS", "true").lower() == "true"
-app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
-app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
-app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_DEFAULT_SENDER", "noreply@deed.com")
+app.config.from_object(Config)
 
 # Initialize Flask-Mail
 try:
@@ -39,34 +32,9 @@ try:
 except Exception as e:
     print(f"Warning: Could not initialize Flask-Mail: {e}")
 
-# Database setup - handle Vercel serverless environment
-# On Vercel, we need to use /tmp for writable files
-# Note: SQLite on Vercel is not ideal for production - consider using Vercel Postgres or another cloud database
-# Check for Vercel environment (VERCEL or VERCEL_ENV are set by Vercel)
-# Also check if we're in a serverless environment by checking if /tmp exists and is writable
-# #region agent log
-try:
-    with open('/Users/IqbalJaved/Desktop/Desktop - MacBook Air/Projects/Python Repos/deed-finance/.cursor/debug.log', 'a') as f:
-        f.write(json.dumps({"sessionId":"debug-session","runId":"init","hypothesisId":"B","location":"app.py:80","message":"Starting database setup","data":{"vercel_env":os.environ.get("VERCEL"),"vercel_env_var":os.environ.get("VERCEL_ENV"),"tmp_exists":os.path.exists("/tmp")},"timestamp":int(__import__('time').time()*1000)}) + '\n')
-except: pass
-print("DEBUG: Starting database setup")
-# #endregion
-
-is_vercel = os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")
-if is_vercel:
-    db_path = "/tmp/clients.db"
-    os.makedirs("/tmp", exist_ok=True)
-else:
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clients.db")
-
-database_url = os.environ.get("DATABASE_URL", f"sqlite:///{db_path}")
-engine = create_engine(database_url, echo=False, connect_args={"check_same_thread": False})
-Session = sessionmaker(bind=engine)
-
-# Initialize database tables
+# Initialize database tables (creates if they don't exist)
 try:
     DbBase.metadata.create_all(engine)
-    print(f"Database initialized at: {db_path}")
 except Exception as e:
     print(f"Warning: Could not initialize database tables: {e}")
 
@@ -101,6 +69,7 @@ def index():
 @app.route("/health")
 def health():
     """Health check endpoint for debugging."""
+    db_url = get_database_url()
     try:
         with Session() as session:
             from sqlalchemy import text
@@ -108,11 +77,10 @@ def health():
         db_status = "connected"
     except Exception as e:
         db_status = f"error: {str(e)}"
-    
+
     return jsonify({
         "status": "ok",
-        "database": db_path,
-        "vercel": bool(is_vercel),
+        "database_type": "sqlite" if is_sqlite(db_url) else "postgresql",
         "db_status": db_status
     }), 200
 
@@ -596,11 +564,15 @@ def advisor():
         for us in user_subs:
             session.expunge(us)
         
+    from llm_service import get_llm_provider
+    llm_available = get_llm_provider() is not None
+
     return render_template(
         "advisor.html",
         user_cards=user_cards,
         categories=categories,
-        user_subs=user_subs
+        user_subs=user_subs,
+        llm_available=llm_available
     )
 
 
@@ -620,38 +592,57 @@ def calculate_points():
         user_cards = session.query(UserCard).options(
             joinedload(UserCard.credit_card)
         ).filter_by(client_id=user_id).all()
-        
+
+        if not user_cards:
+            return jsonify({"results": [], "total_points": 0, "coverage": []})
+
+        card_ids = [uc.credit_card_id for uc in user_cards]
+        category_ids = [int(cid) for cid in spending.keys()]
+
+        # Batch-fetch all bonuses in one query instead of per-card-per-category
+        all_bonuses = session.query(CardBonus).filter(
+            CardBonus.credit_card_id.in_(card_ids),
+            CardBonus.category_id.in_(category_ids)
+        ).all()
+        bonus_map = {
+            (b.credit_card_id, b.category_id): b.earn_rate
+            for b in all_bonuses
+        }
+
+        # Batch-fetch all needed categories in one query
+        categories = {
+            c.id: c for c in
+            session.query(SpendingCategory).filter(
+                SpendingCategory.id.in_(category_ids)
+            ).all()
+        }
+
         results = []
         total_points = 0
-        
-        for category_id, amount in spending.items():
+
+        for category_id_str, amount in spending.items():
             if amount <= 0:
                 continue
-                
-            category = session.get(SpendingCategory, int(category_id))
+
+            cat_id = int(category_id_str)
+            category = categories.get(cat_id)
             if not category:
                 continue
-            
+
             best_card = None
             best_rate = 0
             best_points = 0
-            
+
             for user_card in user_cards:
                 card = user_card.credit_card
-                
-                bonus = session.query(CardBonus).filter_by(
-                    credit_card_id=card.id,
-                    category_id=int(category_id)
-                ).first()
-                
-                rate = bonus.earn_rate if bonus else card.base_earn_rate
+                rate = bonus_map.get((card.id, cat_id), card.base_earn_rate)
                 points = int(amount * rate)
-                
+
                 if rate > best_rate:
                     best_rate = rate
                     best_card = card
                     best_points = points
-            
+
             if best_card:
                 results.append({
                     "category": category.name,
@@ -661,12 +652,12 @@ def calculate_points():
                     "points": best_points
                 })
                 total_points += best_points
-        
+
         # Get subscriptions user can cover
         user_subs = session.query(UserSubscription).options(
             joinedload(UserSubscription.subscription)
         ).filter_by(client_id=user_id, is_active=True).all()
-        
+
         coverage = []
         points_remaining = total_points
         for us in user_subs:
@@ -681,12 +672,104 @@ def calculate_points():
             })
             if can_cover:
                 points_remaining -= points_needed
-        
+
         return jsonify({
             "results": results,
             "total_points": total_points,
             "coverage": coverage
         })
+
+
+# =============================================================================
+# LLM Advisor Chat
+# =============================================================================
+
+@app.route("/advisor-chat", methods=["POST"])
+@login_required
+def advisor_chat():
+    """LLM-powered spending advice endpoint. Streams the response via SSE."""
+    from flask import Response, stream_with_context
+    from llm_service import get_llm_provider, SYSTEM_PROMPT, build_user_context
+
+    provider = get_llm_provider()
+    if not provider:
+        return jsonify({"error": "AI advisor is not configured. Set LLM_API_KEY."}), 503
+
+    data = request.get_json()
+    if not data or not data.get("question"):
+        return jsonify({"error": "Please provide a question."}), 400
+
+    user_question = data["question"]
+    spending_results = data.get("spending_results")
+    user_id = current_user.id
+
+    with Session() as session:
+        user_cards = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(client_id=user_id).all()
+
+        user_subs = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(client_id=user_id, is_active=True).all()
+
+        context = build_user_context(user_cards, user_subs, spending_results)
+
+    full_message = f"{context}\n\n## Question\n{user_question}"
+
+    def generate():
+        try:
+            for chunk in provider.get_advice_stream(SYSTEM_PROMPT, full_message):
+                yield f"data: {json.dumps({'text': chunk})}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
+@app.route("/advisor-chat-sync", methods=["POST"])
+@login_required
+def advisor_chat_sync():
+    """Non-streaming LLM advice fallback for environments where SSE is unreliable."""
+    from llm_service import get_llm_provider, SYSTEM_PROMPT, build_user_context
+
+    provider = get_llm_provider()
+    if not provider:
+        return jsonify({"error": "AI advisor is not configured. Set LLM_API_KEY."}), 503
+
+    data = request.get_json()
+    if not data or not data.get("question"):
+        return jsonify({"error": "Please provide a question."}), 400
+
+    user_question = data["question"]
+    spending_results = data.get("spending_results")
+    user_id = current_user.id
+
+    with Session() as session:
+        user_cards = session.query(UserCard).options(
+            joinedload(UserCard.credit_card)
+        ).filter_by(client_id=user_id).all()
+
+        user_subs = session.query(UserSubscription).options(
+            joinedload(UserSubscription.subscription)
+        ).filter_by(client_id=user_id, is_active=True).all()
+
+        context = build_user_context(user_cards, user_subs, spending_results)
+
+    full_message = f"{context}\n\n## Question\n{user_question}"
+
+    try:
+        response_text = provider.get_advice(SYSTEM_PROMPT, full_message)
+        return jsonify({"response": response_text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # =============================================================================
