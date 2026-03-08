@@ -3,18 +3,20 @@ Database models for Subscription Points Planner MVP.
 Includes credit cards, subscriptions, and user relationship models.
 """
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Boolean, DateTime
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, DeclarativeBase
 from flask_login import UserMixin
 from datetime import datetime
 
-# Create Base - Vercel's runtime will scan this module and find Base
-# This is a known Vercel Python runtime bug that prevents deployment
-# See VERCEL_ISSUE_SUMMARY.md for details and alternative platforms
-DbBase = declarative_base()
 
-# Hide Base from __all__ but it's still in module __dict__ (Vercel scans __dict__)
-__all__ = ['Client', 'CreditCard', 'Subscription', 'SpendingCategory', 
+class DbBase(DeclarativeBase):
+    """
+    Use DeclarativeBase (a real class) instead of declarative_base() (metaclass).
+    Fixes Vercel serverless crash: issubclass() arg 1 must be a class.
+    """
+    pass
+
+
+__all__ = ['Client', 'CreditCard', 'Subscription', 'SpendingCategory',
            'CardBonus', 'UserCard', 'UserSubscription']
 
 

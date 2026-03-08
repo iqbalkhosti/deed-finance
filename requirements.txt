@@ -2,8 +2,8 @@
 Flask==2.3.3
 Werkzeug==2.3.7
 
-# Database
-SQLAlchemy==1.4.23
+# Database (2.0+ required for DeclarativeBase - fixes Vercel serverless crash)
+SQLAlchemy>=2.0.0,<3.0.0
 psycopg2-binary==2.9.9
 
 # Authentication & Security

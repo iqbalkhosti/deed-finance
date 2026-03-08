@@ -40,6 +40,7 @@ def is_sqlite(url=None):
 def create_db_engine(database_url=None):
     """
     Create a SQLAlchemy engine with appropriate settings for the database type.
+    Uses smaller connection pool on Vercel/serverless to avoid exhausting DB connections.
     """
     if database_url is None:
         database_url = get_database_url()
@@ -49,8 +50,14 @@ def create_db_engine(database_url=None):
     if is_sqlite(database_url):
         engine_kwargs["connect_args"] = {"check_same_thread": False}
     else:
-        engine_kwargs["pool_size"] = 5
-        engine_kwargs["max_overflow"] = 10
+        # Serverless (Vercel): each function instance gets its own pool - keep it small
+        is_vercel = os.environ.get("VERCEL") == "1"
+        if is_vercel:
+            engine_kwargs["pool_size"] = 1
+            engine_kwargs["max_overflow"] = 2
+        else:
+            engine_kwargs["pool_size"] = 5
+            engine_kwargs["max_overflow"] = 10
         engine_kwargs["pool_timeout"] = 30
         engine_kwargs["pool_recycle"] = 1800
         engine_kwargs["pool_pre_ping"] = True
