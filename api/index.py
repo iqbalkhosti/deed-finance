@@ -1,18 +1,41 @@
 """
-Minimal test — zero project imports.
-If this crashes, the issue is with pip install / Vercel config.
-If this works, the issue is with one of our dependencies.
+Dependency test phase 2 — try importing the full app module.
+All individual deps work, so the crash is in app.py initialization.
 """
-from flask import Flask, jsonify
 import sys
+import os
+import traceback
 
-app = Flask(__name__)
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+os.chdir(parent_dir)
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def hello(path):
-    return jsonify({
-        "status": "alive",
-        "python": sys.version,
-        "message": "Minimal test works! The issue is with a project dependency."
-    })
+_import_error = None
+app = None
+
+try:
+    from app import app as _app
+    app = _app
+except Exception as e:
+    _import_error = {
+        "error": str(e),
+        "type": type(e).__name__,
+        "traceback": traceback.format_exc(),
+    }
+
+# If import failed, show the actual error
+if app is None:
+    from flask import Flask, jsonify
+    _fallback = Flask(__name__)
+    _fallback.config["SECRET_KEY"] = "debug"
+
+    @_fallback.route("/", defaults={"path": ""})
+    @_fallback.route("/<path:path>")
+    def _show_error(path):
+        return jsonify({
+            "status": "app_import_failed",
+            "error": _import_error,
+        }), 500
+
+    app = _fallback
