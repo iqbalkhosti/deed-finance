@@ -21,6 +21,8 @@ def get_database_url():
     """
     database_url = os.environ.get("DATABASE_URL")
     if database_url:
+        # Strip whitespace/newlines that Vercel UI sometimes adds
+        database_url = database_url.strip()
         # Supabase/Heroku sometimes provide postgres:// which SQLAlchemy 1.4+ rejects
         if database_url.startswith("postgres://"):
             database_url = database_url.replace("postgres://", "postgresql://", 1)
