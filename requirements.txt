@@ -4,6 +4,7 @@ Werkzeug==2.3.7
 
 # Database
 SQLAlchemy==1.4.23
+psycopg2-binary==2.9.9
 
 # Authentication & Security
 Flask-Bcrypt==1.0.1
@@ -19,6 +20,10 @@ Flask-Mail==0.9.1
 
 # Environment
 python-dotenv==1.0.0
+
+# LLM Advisor (only the configured provider is used at runtime)
+anthropic>=0.39.0
+openai>=1.55.0
 
 # Production Server
 gunicorn==21.2.0
