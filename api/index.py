@@ -1,81 +1,41 @@
 """
-Dependency test — import suspicious native extensions one by one.
-If this crashes, one of these imports has incompatible native code.
+Dependency test phase 2 — try importing the full app module.
+All individual deps work, so the crash is in app.py initialization.
 """
-from flask import Flask, jsonify
 import sys
+import os
+import traceback
 
-# ── Test native-extension imports (these are the crash suspects) ──
-results = {}
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+os.chdir(parent_dir)
 
-# Test 1: bcrypt (Rust-compiled extension)
+_import_error = None
+app = None
+
 try:
-    import bcrypt
-    results["bcrypt"] = f"ok (v{bcrypt.__version__})"
+    from app import app as _app
+    app = _app
 except Exception as e:
-    results["bcrypt"] = f"FAIL: {e}"
+    _import_error = {
+        "error": str(e),
+        "type": type(e).__name__,
+        "traceback": traceback.format_exc(),
+    }
 
-# Test 2: SQLAlchemy (uses greenlet C extension)
-try:
-    import sqlalchemy
-    results["sqlalchemy"] = f"ok (v{sqlalchemy.__version__})"
-except Exception as e:
-    results["sqlalchemy"] = f"FAIL: {e}"
+# If import failed, show the actual error
+if app is None:
+    from flask import Flask, jsonify
+    _fallback = Flask(__name__)
+    _fallback.config["SECRET_KEY"] = "debug"
 
-# Test 3: pg8000 (pure Python — should be fine)
-try:
-    import pg8000
-    results["pg8000"] = "ok"
-except Exception as e:
-    results["pg8000"] = f"FAIL: {e}"
+    @_fallback.route("/", defaults={"path": ""})
+    @_fallback.route("/<path:path>")
+    def _show_error(path):
+        return jsonify({
+            "status": "app_import_failed",
+            "error": _import_error,
+        }), 500
 
-# Test 4: anthropic
-try:
-    import anthropic
-    results["anthropic"] = f"ok (v{anthropic.__version__})"
-except Exception as e:
-    results["anthropic"] = f"FAIL: {e}"
-
-# Test 5: openai
-try:
-    import openai
-    results["openai"] = f"ok (v{openai.__version__})"
-except Exception as e:
-    results["openai"] = f"FAIL: {e}"
-
-# Test 6: flask_bcrypt (wraps bcrypt)
-try:
-    from flask_bcrypt import Bcrypt
-    results["flask_bcrypt"] = "ok"
-except Exception as e:
-    results["flask_bcrypt"] = f"FAIL: {e}"
-
-# Test 7: our db module
-try:
-    import os
-    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    if parent_dir not in sys.path:
-        sys.path.insert(0, parent_dir)
-    os.chdir(parent_dir)
-    from db import engine, Session
-    results["db_module"] = "ok"
-except Exception as e:
-    results["db_module"] = f"FAIL: {e}"
-
-# Test 8: our models module
-try:
-    from models import DbBase, Client
-    results["models"] = "ok"
-except Exception as e:
-    results["models"] = f"FAIL: {e}"
-
-app = Flask(__name__)
-
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def hello(path):
-    return jsonify({
-        "status": "dependency_test",
-        "python": sys.version,
-        "results": results,
-    })
+    app = _fallback
