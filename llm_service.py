@@ -36,22 +36,29 @@ class AnthropicProvider:
 class OpenAIProvider:
     """OpenAI-compatible API provider (works with OpenAI, OpenRouter, etc.)."""
 
-    def __init__(self, api_key, model="gpt-4o-mini", base_url=None):
+    def __init__(self, api_key, model="gpt-4o-mini", base_url=None, no_system_role=False):
         import openai
         kwargs = {"api_key": api_key}
         if base_url:
             kwargs["base_url"] = base_url
         self.client = openai.OpenAI(**kwargs)
         self.model = model
+        self.no_system_role = no_system_role
+
+    def _build_messages(self, system_prompt, user_message):
+        """Build messages, folding system prompt into user message if system role isn't supported."""
+        if self.no_system_role:
+            return [{"role": "user", "content": f"{system_prompt}\n\n{user_message}"}]
+        return [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_message}
+        ]
 
     def get_advice(self, system_prompt, user_message):
         response = self.client.chat.completions.create(
             model=self.model,
             max_tokens=1024,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ]
+            messages=self._build_messages(system_prompt, user_message)
         )
         return response.choices[0].message.content
 
@@ -59,10 +66,7 @@ class OpenAIProvider:
         stream = self.client.chat.completions.create(
             model=self.model,
             max_tokens=1024,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_message}
-            ],
+            messages=self._build_messages(system_prompt, user_message),
             stream=True
         )
         for chunk in stream:
@@ -83,11 +87,12 @@ def get_llm_provider():
 
     model = os.environ.get("LLM_MODEL")
     base_url = os.environ.get("LLM_BASE_URL")
+    no_system_role = os.environ.get("LLM_NO_SYSTEM_ROLE", "false").lower() == "true"
 
     if provider_name == "anthropic":
         return AnthropicProvider(api_key=api_key, **({"model": model} if model else {}))
     elif provider_name == "openai":
-        kwargs = {"api_key": api_key}
+        kwargs = {"api_key": api_key, "no_system_role": no_system_role}
         if model:
             kwargs["model"] = model
         if base_url:
