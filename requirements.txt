@@ -25,5 +25,4 @@ python-dotenv==1.0.0
 anthropic>=0.39.0
 openai>=1.55.0
 
-# Production Server
-gunicorn==21.2.0
+# Production Server (gunicorn not needed on Vercel — its runtime provides WSGI hosting)

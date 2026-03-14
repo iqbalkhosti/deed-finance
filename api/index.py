@@ -1,17 +1,14 @@
 """
-Vercel serverless function entry point.
-Exposes the Flask app for Vercel's Python runtime (@vercel/python).
+Dependency test phase 2 — try importing the full app module.
+All individual deps work, so the crash is in app.py initialization.
 """
 import sys
 import os
 import traceback
 
-# Add the project root to the path so 'from app import app' works
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
-
-# Change working directory to project root so relative paths work
 os.chdir(parent_dir)
 
 _import_error = None
@@ -27,7 +24,7 @@ except Exception as e:
         "traceback": traceback.format_exc(),
     }
 
-# If import failed, expose a minimal Flask app that returns the error for debugging
+# If import failed, show the actual error
 if app is None:
     from flask import Flask, jsonify
     _fallback = Flask(__name__)
@@ -36,8 +33,9 @@ if app is None:
     @_fallback.route("/", defaults={"path": ""})
     @_fallback.route("/<path:path>")
     def _show_error(path):
-        return jsonify(_import_error), 500
+        return jsonify({
+            "status": "app_import_failed",
+            "error": _import_error,
+        }), 500
 
     app = _fallback
-
-# Vercel's @vercel/python runtime auto-detects a WSGI app named 'app'

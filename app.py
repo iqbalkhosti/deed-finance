@@ -32,11 +32,12 @@ try:
 except Exception as e:
     print(f"Warning: Could not initialize Flask-Mail: {e}")
 
-# Initialize database tables (creates if they don't exist)
-try:
-    DbBase.metadata.create_all(engine)
-except Exception as e:
-    print(f"Warning: Could not initialize database tables: {e}")
+# Initialize database tables — skip on Vercel where tables already exist in Supabase
+if os.environ.get("VERCEL") != "1":
+    try:
+        DbBase.metadata.create_all(engine)
+    except Exception as e:
+        print(f"Warning: Could not initialize database tables: {e}")
 
 # Extensions
 bcrypt = Bcrypt(app)
