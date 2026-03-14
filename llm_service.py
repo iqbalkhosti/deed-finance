@@ -34,11 +34,14 @@ class AnthropicProvider:
 
 
 class OpenAIProvider:
-    """OpenAI GPT API provider."""
+    """OpenAI-compatible API provider (works with OpenAI, OpenRouter, etc.)."""
 
-    def __init__(self, api_key, model="gpt-4o-mini"):
+    def __init__(self, api_key, model="gpt-4o-mini", base_url=None):
         import openai
-        self.client = openai.OpenAI(api_key=api_key)
+        kwargs = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self.client = openai.OpenAI(**kwargs)
         self.model = model
 
     def get_advice(self, system_prompt, user_message):
@@ -78,10 +81,18 @@ def get_llm_provider():
 
     provider_name = os.environ.get("LLM_PROVIDER", "anthropic").lower()
 
+    model = os.environ.get("LLM_MODEL")
+    base_url = os.environ.get("LLM_BASE_URL")
+
     if provider_name == "anthropic":
-        return AnthropicProvider(api_key=api_key)
+        return AnthropicProvider(api_key=api_key, **({"model": model} if model else {}))
     elif provider_name == "openai":
-        return OpenAIProvider(api_key=api_key)
+        kwargs = {"api_key": api_key}
+        if model:
+            kwargs["model"] = model
+        if base_url:
+            kwargs["base_url"] = base_url
+        return OpenAIProvider(**kwargs)
     else:
         return None
 
